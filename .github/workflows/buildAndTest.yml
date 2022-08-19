@@ -1,4 +1,5 @@
 name: Build and Test
+description: "Build StableHLO against proper LLVM commit, and run tests in `stablehlo/tests/`."
 
 on:
   pull_request:
@@ -26,8 +27,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os-arch: [maci-x86_64] # Consider macos-arm64 builds. FIXME: ubuntu-x86_64 not building properly
+        os-arch: [maci-x86_64] # ubuntu-x86_64] TODO: linux crashing in GH env.
         include:
+          # TODO: Uncomment once linux build is ready for GH Actions
           # - os-arch: ubuntu-x86_64
           #   os: ubuntu-22.04 # Consider ubuntu version
           #   llvm-build-dir: "$GITHUB_WORKSPACE/llvm-build"
@@ -41,19 +43,17 @@ jobs:
     steps:
 
     # Check out stablehlo repo
-    # TODO: Confirm this will get the pull_request if action is on pull_request
     - name: Checkout stablehlo
       uses: actions/checkout@v2
-      with:
-        submodules: 'true' # TODO: What is this?
 
+    # Read llvm revision from `build_tools/llvm_version.txt`
     - name: Get LLVM Revision
       id: llvm-revision
       shell: bash
       run: |
         echo "::set-output name=revision::$(cat ${{ github.workspace }}/build_tools/llvm_version.txt)"
 
-    # Check out / build LLVM
+    # Check out LLVM, download Ninja, setup ccache
     - name: Setup workspace
       uses: ./.github/actions/setup-build
       with:
@@ -66,6 +66,6 @@ jobs:
         ./build_tools/github_actions/ci_build_llvm.sh "$GITHUB_WORKSPACE/llvm-project/" ${{ matrix.llvm-build-dir }}
 
     # Configure for linux
-    - name: Build and Test stablehlo os-arch='${{ matrix.os.arch }}'
+    - name: Build and Test StableHLO os-arch='${{ matrix.os-arch }}'
       run: |
         ./build_tools/github_actions/ci_build_stablehlo.sh ${{ matrix.llvm-build-dir }} ${{ matrix.stablehlo-build-dir }}

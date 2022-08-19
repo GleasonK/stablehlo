@@ -1,4 +1,4 @@
-name: "Setup build environment (ninja, ccache)"
+name: "Setup build environment (ninja, ccache, llvm)"
 description: "Setup the build environment. A cached build of llvm at a given ref."
 
 inputs:
