@@ -4,7 +4,10 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    branches: [ main, actions ] # FIXME: Remove for pull request.
+    branches: [ main ]
+  schedule:
+    # Always regenerate once every day
+    - cron:  '* 12 * * *'
   workflow_dispatch:
 
 # Ensure that only a single job or workflow using the same
