@@ -1,10 +1,11 @@
-# Based on https://github.com/iree-org/iree/blob/main/.github/workflows/lint.yml
+# Copyright 2022 The StableHLO Authors.
 
 name: Lint
 
 on: [pull_request]
 
 jobs:
+  # Based on https://github.com/iree-org/iree/blob/main/.github/workflows/lint.yml
   clang-format:
     if: "github.event_name == 'pull_request'"
     runs-on: ubuntu-latest

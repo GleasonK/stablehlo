@@ -1,5 +1,9 @@
+# Copyright 2022 The StableHLO Authors.
+
+# The setup-build action gets everything needed by buildAndTest into the workspace.
+# This checks out the proper revision of the LLVM repository, installs ninja, and sets
+# up the ccache for faster re-compilation.
 name: "Setup build environment (ninja, ccache, llvm)"
-description: "Setup the build environment. A cached build of llvm at a given ref."
 
 inputs:
   llvm-ref:
@@ -9,10 +13,11 @@ inputs:
 
 
 runs:
-  using: "composite" # TODO: What is this?
+  # Based on https://github.com/llvm/torch-mlir/blob/main/.github/actions/setup-build/action.yml
+  using: "composite"
 
   steps:
-  # Checkout llvm at revision
+  # Checkout llvm at revision specified in input argument.
   - uses: actions/checkout@v2
     with:
       repository: llvm/llvm-project
