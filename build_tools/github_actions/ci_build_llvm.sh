@@ -26,7 +26,6 @@ LLVM_SRC_DIR="$1"
 LLVM_BUILD_DIR="$2"
 
 
-
 cmake -GNinja \
   "-B$LLVM_BUILD_DIR" \
   "-H$LLVM_SRC_DIR/llvm" \
