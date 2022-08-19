@@ -1855,8 +1855,7 @@ LogicalResult verifyCollectivePermuteSourceTargetPairs(
 }
 
 LogicalResult CollectivePermuteOp::verify() {
-  return verifyCollectivePermuteSourceTargetPairs(*this,
-                                                       source_target_pairs());
+  return verifyCollectivePermuteSourceTargetPairs(*this, source_target_pairs());
 }
 
 //===----------------------------------------------------------------------===//
@@ -5753,7 +5752,7 @@ ParseResult parseTupleOpType(OpAsmParser& parser,
   return success();
 }
 
-void printPairwiseOpType  (  OpAsmPrinter& p, Operation*, TypeRange operands,
+void printPairwiseOpType(OpAsmPrinter& p, Operation*, TypeRange operands,
                          TypeRange results) {
   llvm::interleaveComma(operands, p);
 }
