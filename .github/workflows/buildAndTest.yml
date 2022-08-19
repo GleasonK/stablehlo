@@ -1,5 +1,4 @@
 name: Build and Test
-description: "Build StableHLO against proper LLVM commit, and run tests in `stablehlo/tests/`."
 
 on:
   pull_request:

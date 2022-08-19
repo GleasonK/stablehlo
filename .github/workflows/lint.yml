@@ -1,7 +1,6 @@
 # Based on https://github.com/iree-org/iree/blob/main/.github/workflows/lint.yml
 
 name: Lint
-description: "Run clang-format on all pull_requests."
 
 on: [pull_request]
 
