@@ -5753,7 +5753,7 @@ ParseResult parseTupleOpType(OpAsmParser& parser,
   return success();
 }
 
-void printPairwiseOpType(OpAsmPrinter& p, Operation*, TypeRange operands,
+void printPairwiseOpType  (  OpAsmPrinter& p, Operation*, TypeRange operands,
                          TypeRange results) {
   llvm::interleaveComma(operands, p);
 }
