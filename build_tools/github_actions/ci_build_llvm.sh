@@ -16,25 +16,35 @@
 # This file is similar to build_mlir.sh, but passes different flags for
 # cacheing in GitHub Actions.
 
-# This file gets called on build directory where resources are placed
-# during `ci_configure`, and builds stablehlo in the directory specified
-# by the second argument.
-
 if [[ $# -ne 2 ]] ; then
-  echo "Usage: $0 <llvm_build_dir> <stablehlo_build_dir>"
+  echo "Usage: $0 <path/to/llvm> <build_dir>"
   exit 1
 fi
 
-LLVM_BUILD_DIR="$1"
-STABLEHLO_BUILD_DIR="$2"
+# LLVM source
+LLVM_SRC_DIR="$1"
+LLVM_BUILD_DIR="$2"
+
+
+
+cmake -GNinja \
+  "-B$LLVM_BUILD_DIR" \
+  "-H$LLVM_SRC_DIR/llvm" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_LINKER=lld \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+  -DLLVM_BUILD_TOOLS=OFF \
+  -DLLVM_ENABLE_ASSERTIONS=On \
+  -DLLVM_ENABLE_BINDINGS=OFF \
+  -DLLVM_ENABLE_PROJECTS=mlir \
+  -DLLVM_INCLUDE_TESTS=OFF \
+  -DLLVM_INCLUDE_TOOLS=ON \
+  -DLLVM_INSTALL_UTILS=ON \
+  -DLLVM_PARALLEL_LINK_JOBS=1 \
+  -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU"
 
 # Build LLVM/MLIR
 cmake --build "$LLVM_BUILD_DIR" --target all --target mlir-cpu-runner
-
-# Build StableHLO
-cmake -GNinja \
-  -B"$STABLEHLO_BUILD_DIR" \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_LINKER=lld \
-  -DLLVM_ENABLE_ASSERTIONS=On \
-  -DMLIR_DIR="$LLVM_BUILD_DIR/lib/cmake/mlir"

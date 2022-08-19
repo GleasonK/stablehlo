@@ -2,15 +2,9 @@ name: "Setup build environment (ninja, ccache)"
 description: "Setup the build environment. A cached build of llvm at a given ref."
 
 inputs:
-  cache-suffix:
-    description: |
-      Additional string that is used to compute the ccache hash.
-      Different jobs running the action need distinct values for this key,
-      but the content is irrelevant.
-    required: true
   llvm-ref:
     description: |
-      LLVM Commit Ref for checkout and build.
+      LLVM Commit Ref for checkout and build. Used for ccache value and checkout.
     required: true
 
 
@@ -35,6 +29,6 @@ runs:
   - name: Ccache for C++ compilation
     uses: hendrikmuhs/ccache-action@v1.2
     with:
-      key: ${{ runner.os }}-stablehlo_assets_v2-${{ inputs.cache-suffix }}
+      key: ${{ runner.os }}-stablehlo_assets-${{ inputs.llvm-ref }}
       max-size: 2G
 
