@@ -197,7 +197,6 @@ SortOp createSortOp(PatternRewriter *rewriter, const Location &loc,
                     const llvm::ArrayRef<Type> &elementTypes, int64_t dimension,
                     bool isStable, ComparisonDirection direction);
 
-
 //===----------------------------------------------------------------------===//
 // Assembly - Custom Type Directives
 //===----------------------------------------------------------------------===//
@@ -205,11 +204,11 @@ SortOp createSortOp(PatternRewriter *rewriter, const Location &loc,
 // These functions are shared by stablehlo and mhlo.
 
 // See parseSameOperandsAndResultType
-void printSameOperandsAndResultTypeImpl(OpAsmPrinter& p, Operation* op,
+void printSameOperandsAndResultTypeImpl(OpAsmPrinter &p, Operation *op,
                                         TypeRange operands, Type result);
-ParseResult parseSameOperandsAndResultTypeImpl(OpAsmParser& parser,
-                                               ArrayRef<Type*> operands,
-                                               Type& result);
+ParseResult parseSameOperandsAndResultTypeImpl(OpAsmParser &parser,
+                                               ArrayRef<Type *> operands,
+                                               Type &result);
 
 // Declarative `custom<SameOperandsAndResultType>(...)` implementation:
 // Pretty print for ops with many operands, but one result type, simplifies
@@ -230,7 +229,7 @@ ParseResult parseSameOperandsAndResultTypeImpl(OpAsmParser& parser,
 // Note that `type($result)` is the first argument, this is done because the
 // behavior of trailing parameter packs is easily understandable.
 template <class... OpTypes>
-void printSameOperandsAndResultType(OpAsmPrinter& p, Operation* op,
+void printSameOperandsAndResultType(OpAsmPrinter &p, Operation *op,
                                     OpTypes... types) {
   static_assert(sizeof...(types) > 0);  // Must be non empty, must have result
   SmallVector<Type> typesVec{types...};
@@ -240,11 +239,11 @@ void printSameOperandsAndResultType(OpAsmPrinter& p, Operation* op,
 }
 
 template <class... OpTypes>
-ParseResult parseSameOperandsAndResultType(OpAsmParser& parser,
-                                           OpTypes&... types) {
+ParseResult parseSameOperandsAndResultType(OpAsmParser &parser,
+                                           OpTypes &...types) {
   static_assert(sizeof...(types) > 0);  // Must be non empty, must have result
-  SmallVector<Type*> typesVec{&types...};
-  ArrayRef<Type*> typesRef = makeArrayRef(typesVec);
+  SmallVector<Type *> typesVec{&types...};
+  ArrayRef<Type *> typesRef = makeArrayRef(typesVec);
   return parseSameOperandsAndResultTypeImpl(parser, typesRef.drop_back(1),
                                             *typesRef.back());
 }
@@ -256,10 +255,10 @@ ParseResult parseSameOperandsAndResultType(OpAsmParser& parser,
 //    %1 : tensor<i1>
 //    %2 : tensor<f32>
 //    %3 : tuple<tensor<i1>, tensor<f32>>
-void printTupleOpType(OpAsmPrinter& p, Operation*, TypeRange operands,
+void printTupleOpType(OpAsmPrinter &p, Operation *, TypeRange operands,
                       Type result);
-ParseResult parseTupleOpType(OpAsmParser& parser,
-                             SmallVectorImpl<Type>& operands, Type& result);
+ParseResult parseTupleOpType(OpAsmParser &parser,
+                             SmallVectorImpl<Type> &operands, Type &result);
 
 // PairwiseOps - only print result type. Operand types are trivially
 // inferrable.
@@ -270,11 +269,11 @@ ParseResult parseTupleOpType(OpAsmParser& parser,
 //    %2 : tensor<f32>
 //    %3 : tensor<i1>
 //    %4 : tensor<f32>
-void printPairwiseOpType(OpAsmPrinter& p, Operation*, TypeRange operands,
+void printPairwiseOpType(OpAsmPrinter &p, Operation *, TypeRange operands,
                          TypeRange results);
-ParseResult parsePairwiseOpType(OpAsmParser& parser,
-                                SmallVectorImpl<Type>& operands,
-                                SmallVectorImpl<Type>& results);
+ParseResult parsePairwiseOpType(OpAsmParser &parser,
+                                SmallVectorImpl<Type> &operands,
+                                SmallVectorImpl<Type> &results);
 
 }  // end namespace stablehlo
 }  // end namespace mlir
