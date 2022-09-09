@@ -12,8 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef STABLEHLO_DIALECT_STABLEHLO_BYTECODE_H
-#define STABLEHLO_DIALECT_STABLEHLO_BYTECODE_H
+#ifndef STABLEHLO_DIALECT_STABLEHLOBYTECODE_H
+#define STABLEHLO_DIALECT_STABLEHLOBYTECODE_H
 
 namespace mlir {
 namespace stablehlo {
@@ -25,4 +25,4 @@ void addBytecodeInterface(StablehloDialect *dialect);
 }  // namespace stablehlo
 }  // namespace mlir
 
-#endif  // STABLEHLO_DIALECT_STABLEHLO_BYTECODE_H
+#endif  // STABLEHLO_DIALECT_STABLEHLOBYTECODE_H

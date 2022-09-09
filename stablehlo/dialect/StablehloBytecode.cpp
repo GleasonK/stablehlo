@@ -312,6 +312,7 @@ ArgResultAliasAttr StablehloBytecodeInterface::readArgResultAliasAttr(
     DialectBytecodeReader &reader) const {
   LOG_READ_CALL;
 
+
   llvm::SmallVector<int64_t> argTupleIndices;
   int64_t resultIndex;
   llvm::SmallVector<int64_t> resultTupleIndices;

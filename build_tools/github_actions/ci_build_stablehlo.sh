@@ -20,8 +20,23 @@
 # during `ci_configure`, and builds stablehlo in the directory specified
 # by the second argument.
 
-if [[ $# -ne 2 ]] ; then
-  echo "Usage: $0 <llvm_build_dir> <stablehlo_build_dir>"
+print_usage() {
+  echo "Usage: $0 [-n] <llvm_build_dir> <stablehlo_build_dir>"
+  echo "  -n   Do not build StableHLO"
+}
+
+DO_BUILD='true'
+while getopts 'n' flag; do
+  case "${flag}" in
+    n) DO_BUILD='false' ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+if [[ $# -lt 2 ]] ; then
+  print_usage
   exit 1
 fi
 
@@ -35,11 +50,14 @@ cmake -GNinja \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_ASSERTIONS=On \
   -DMLIR_DIR="$LLVM_BUILD_DIR/lib/cmake/mlir" \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DCMAKE_CXX_COMPILER=clang++ \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   -DCMAKE_C_COMPILER=clang \
-  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+  -DCMAKE_C_COMPILER_LAUNCHER=ccache
 
 # Build and Check StableHLO
-cd "$STABLEHLO_BUILD_DIR"
-ninja check-stablehlo
+if [[ $DO_BUILD == 'true' ]]; then
+  cd "$STABLEHLO_BUILD_DIR"
+  ninja check-stablehlo
+fi
