@@ -47,7 +47,8 @@ $BUILD_TOOLS_DIR/ci_build_stablehlo_python_api.sh -n "$LLVM_PROJECT_DIR" "$STABL
 
 # Exclude python files since the current build is only for source files.
 echo "Running clang-tidy..."
-CLANG_TIDY_FILES=$(git diff --name-only HEAD origin | \
+BASE_BRANCH=${GITHUB_BASE_REF:-origin}
+CLANG_TIDY_FILES=$(git diff --name-only HEAD $BASE_BRANCH | \
                    grep '.*\.h\|.*\.cpp' | \
                    grep -v "/python/" | \
                    xargs)
