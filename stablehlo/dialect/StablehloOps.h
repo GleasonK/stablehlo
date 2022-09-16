@@ -19,6 +19,8 @@ limitations under the License.
 
 #include <algorithm>
 
+#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Quant/QuantTypes.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/IR/Attributes.h"
@@ -38,8 +40,6 @@ limitations under the License.
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "mlir/Support/LogicalResult.h"
 #include "stablehlo/dialect/Base.h"
-#include "llvm/ADT/SmallSet.h"
-#include "llvm/ADT/StringRef.h"
 
 // Include order matters.
 #include "stablehlo/dialect/StablehloEnums.h.inc"

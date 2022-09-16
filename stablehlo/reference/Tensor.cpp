@@ -18,12 +18,12 @@ limitations under the License.
 #include <algorithm>
 #include <complex>
 
-#include "mlir/AsmParser/AsmParser.h"
-#include "mlir/IR/BuiltinTypes.h"
-#include "mlir/Support/DebugStringHelper.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
+#include "mlir/AsmParser/AsmParser.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Support/DebugStringHelper.h"
 
 namespace mlir {
 namespace stablehlo {

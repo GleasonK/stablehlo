@@ -14,12 +14,12 @@ limitations under the License.
 ==============================================================================*/
 
 #include "stablehlo/dialect/StablehloBytecode.h"
-#include "stablehlo/dialect/StablehloOps.h"
 
-#include "mlir/Bytecode/BytecodeImplementation.h"
-#include "mlir/IR/Diagnostics.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Debug.h"
+#include "mlir/Bytecode/BytecodeImplementation.h"
+#include "mlir/IR/Diagnostics.h"
+#include "stablehlo/dialect/StablehloOps.h"
 
 //===----------------------------------------------------------------------===//
 // Debug Trace Helpers
@@ -311,7 +311,6 @@ Attribute StablehloBytecodeInterface::readAttribute(
 ArgResultAliasAttr StablehloBytecodeInterface::readArgResultAliasAttr(
     DialectBytecodeReader &reader) const {
   LOG_READ_CALL;
-
 
   llvm::SmallVector<int64_t> argTupleIndices;
   int64_t resultIndex;

@@ -17,10 +17,10 @@ limitations under the License.
 #define STABLEHLO_REFERENCE_INTERPRETER_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "stablehlo/reference/Tensor.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Error.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "stablehlo/reference/Tensor.h"
 
 namespace mlir {
 namespace stablehlo {

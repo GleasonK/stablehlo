@@ -17,12 +17,12 @@ limitations under the License.
 
 #include <complex>
 
-#include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinTypes.h"
-#include "mlir/Support/DebugStringHelper.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Support/DebugStringHelper.h"
 
 namespace mlir {
 namespace stablehlo {

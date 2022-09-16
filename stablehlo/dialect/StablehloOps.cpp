@@ -29,6 +29,22 @@ limitations under the License.
 #include <unordered_map>
 #include <utility>
 
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/ADT/iterator_range.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/MathExtras.h"
+#include "llvm/Support/Regex.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Complex/IR/Complex.h"
 #include "mlir/Dialect/SparseTensor/IR/SparseTensor.h"
@@ -56,22 +72,6 @@ limitations under the License.
 #include "mlir/Transforms/InliningUtils.h"
 #include "stablehlo/dialect/StablehloBytecode.h"
 #include "stablehlo/dialect/StablehloOps.h.inc"
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/APInt.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringExtras.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/StringSet.h"
-#include "llvm/ADT/Twine.h"
-#include "llvm/ADT/TypeSwitch.h"
-#include "llvm/ADT/iterator_range.h"
-#include "llvm/Support/Casting.h"
-#include "llvm/Support/FormatVariadic.h"
-#include "llvm/Support/MathExtras.h"
-#include "llvm/Support/Regex.h"
 
 // Include order matters
 #include "stablehlo/dialect/StablehloEnums.cpp.inc"
@@ -1701,7 +1701,7 @@ LogicalResult DynamicGatherOp::inferReturnTypeComponents(
                           errorEmitter)))
     return failure();
 
-  auto getSliceDim = [](int64_t  /*index*/) { return ShapedType::kDynamicSize; };
+  auto getSliceDim = [](int64_t /*index*/) { return ShapedType::kDynamicSize; };
   return inferGatherReturnTypeComponents(operandShape, startIndicesShape,
                                          getSliceDim, dimensionNumbers,
                                          inferredReturnShapes, errorEmitter);
@@ -2324,8 +2324,8 @@ LogicalResult BatchNormGradOp::verify() {
 }
 
 LogicalResult BatchNormGradOp::inferReturnTypeComponents(
-    MLIRContext*  /*context*/, Optional<Location>  /*location*/, ValueShapeRange operands,
-    DictionaryAttr attributes, RegionRange regions,
+    MLIRContext* /*context*/, Optional<Location> /*location*/,
+    ValueShapeRange operands, DictionaryAttr attributes, RegionRange regions,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes) {
   BatchNormGradOp::Adaptor adaptor(operands, attributes, regions);
 
@@ -2352,8 +2352,8 @@ LogicalResult BatchNormTrainingOp::verify() {
 }
 
 LogicalResult BatchNormTrainingOp::inferReturnTypeComponents(
-    MLIRContext*  /*context*/, Optional<Location>  /*location*/, ValueShapeRange operands,
-    DictionaryAttr attributes, RegionRange regions,
+    MLIRContext* /*context*/, Optional<Location> /*location*/,
+    ValueShapeRange operands, DictionaryAttr attributes, RegionRange regions,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes) {
   BatchNormTrainingOp::Adaptor adaptor(operands, attributes, regions);
 
@@ -2380,8 +2380,8 @@ LogicalResult BatchNormInferenceOp::verify() {
 }
 
 LogicalResult BatchNormInferenceOp::inferReturnTypeComponents(
-    MLIRContext*  /*context*/, Optional<Location>  /*location*/, ValueShapeRange operands,
-    DictionaryAttr attributes, RegionRange regions,
+    MLIRContext* /*context*/, Optional<Location> /*location*/,
+    ValueShapeRange operands, DictionaryAttr attributes, RegionRange regions,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes) {
   BatchNormInferenceOp::Adaptor adaptor(operands, attributes, regions);
   auto operandType = adaptor.operand().getType().cast<RankedTensorType>();
@@ -2951,8 +2951,8 @@ LogicalResult RealOp::inferReturnTypes(
 //===----------------------------------------------------------------------===//
 
 LogicalResult ConcatenateOp::inferReturnTypes(
-    MLIRContext*, Optional<Location>  /*location*/, ValueRange operands,
-    DictionaryAttr attributes, RegionRange  /*regions*/,
+    MLIRContext*, Optional<Location> /*location*/, ValueRange operands,
+    DictionaryAttr attributes, RegionRange /*regions*/,
     SmallVectorImpl<Type>& inferredReturnTypes) {
   if (operands.empty()) {
     return failure();
@@ -3191,7 +3191,7 @@ LogicalResult DynamicSliceOp::verify() {
 }
 
 LogicalResult DynamicSliceOp::inferReturnTypeComponents(
-    MLIRContext*, Optional<Location>  /*location*/, ValueShapeRange operands,
+    MLIRContext*, Optional<Location> /*location*/, ValueShapeRange operands,
     DictionaryAttr attributes, RegionRange regions,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes) {
   DynamicSliceOp::Adaptor adaptor(operands, attributes, regions);
@@ -3699,8 +3699,7 @@ void ReduceOp::build(OpBuilder& builder, OperationState& state,
   resultTy.reserve(operands.size());
 
   for (Value operand : operands) {
-    resultTy.push_back(
-        getReduceResultType(operand.getType(), dimensions));
+    resultTy.push_back(getReduceResultType(operand.getType(), dimensions));
   }
   build(builder, state, resultTy, operands, initValues, dimensions);
 }
@@ -4189,8 +4188,9 @@ LogicalResult RngOp::verify() {
 }
 
 LogicalResult RngOp::inferReturnTypeComponents(
-    MLIRContext* /*context*/, Optional<Location> location, ValueShapeRange operands,
-    DictionaryAttr /*attributes*/, RegionRange /*regions*/,
+    MLIRContext* /*context*/, Optional<Location> location,
+    ValueShapeRange operands, DictionaryAttr /*attributes*/,
+    RegionRange /*regions*/,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes) {
   return rngInferReturnTypeComponents(location, operands, inferredReturnShapes);
 }
@@ -4277,7 +4277,7 @@ LogicalResult SelectOp::verify() {
 // Makes it such that a SelectOp that is a non-root operation in a DRR infers
 // the return type based on operand type.
 LogicalResult SelectOp::inferReturnTypeComponents(
-    MLIRContext*, Optional<Location>  /*location*/, ValueShapeRange operands,
+    MLIRContext*, Optional<Location> /*location*/, ValueShapeRange operands,
     DictionaryAttr attributes, RegionRange,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes) {
   SelectOp::Adaptor op(operands, attributes);
@@ -4650,7 +4650,7 @@ LogicalResult ReshapeOp::verify() {
 //===----------------------------------------------------------------------===//
 
 LogicalResult ReplicaIdOp::inferReturnTypes(
-    MLIRContext* context, Optional<Location>, ValueRange  /*operands*/,
+    MLIRContext* context, Optional<Location>, ValueRange /*operands*/,
     DictionaryAttr, RegionRange, SmallVectorImpl<Type>& inferredReturnTypes) {
   inferredReturnTypes.push_back(RankedTensorType::get(
       /*shape=*/{}, IntegerType::get(context, 32, IntegerType::Unsigned)));
@@ -4729,8 +4729,8 @@ static int64_t inferSliceDim(int64_t inputDim, int64_t start, int64_t end,
 //  P3~5. Verify 0 <= start_indices[i] <= limit_indices[i] <= shape(operand)[i].
 //  P6. Verify stride[i] > 0.
 LogicalResult SliceOp::inferReturnTypes(
-    MLIRContext*  /*context*/, Optional<Location> location, ValueRange operands,
-    DictionaryAttr attributes, RegionRange  /*regions*/,
+    MLIRContext* /*context*/, Optional<Location> location, ValueRange operands,
+    DictionaryAttr attributes, RegionRange /*regions*/,
     SmallVectorImpl<Type>& inferredReturnTypes) {
   SliceOpAdaptor slice(operands, attributes);
   Type ty = slice.operand().getType();
@@ -5066,7 +5066,7 @@ LogicalResult GetTupleElementOp::inferReturnTypes(
 
 LogicalResult TupleOp::inferReturnTypes(
     MLIRContext* context, Optional<Location>, ValueRange operands,
-    DictionaryAttr  /*attributes*/, RegionRange,
+    DictionaryAttr /*attributes*/, RegionRange,
     SmallVectorImpl<Type>& inferredReturnTypes) {
   inferredReturnTypes.push_back(TupleType::get(context, TypeRange(operands)));
   return success();
@@ -5760,7 +5760,7 @@ ParseResult parseSameOperandsAndResultType(OpAsmParser& parser,
 }
 
 void printVariadicSameOperandsAndResultType(OpAsmPrinter& p, Operation* op,
-                                            OperandRange  /*operands*/,
+                                            OperandRange /*operands*/,
                                             TypeRange opTypes, Type result) {
   return printSameOperandsAndResultTypeImpl(p, op, opTypes, result);
 }
@@ -5790,7 +5790,7 @@ ParseResult parseVariadicSameOperandsAndResultType(
 //    %1 : tensor<i1>
 //    %2 : tensor<f32>
 //    %3 : tuple<tensor<i1>, tensor<f32>>
-void printTupleOpType(OpAsmPrinter& p, Operation*, TypeRange  /*operands*/,
+void printTupleOpType(OpAsmPrinter& p, Operation*, TypeRange /*operands*/,
                       Type result) {
   p.printType(result);
 }
@@ -5823,7 +5823,7 @@ ParseResult parseTupleOpType(OpAsmParser& parser,
 //    %3 : tensor<i1>
 //    %4 : tensor<f32>
 void printPairwiseOpType(OpAsmPrinter& p, Operation*, TypeRange operands,
-                         TypeRange  /*results*/) {
+                         TypeRange /*results*/) {
   llvm::interleaveComma(operands, p);
 }
 
@@ -6034,7 +6034,7 @@ void ScatterDimensionNumbersAttr::print(AsmPrinter& printer) const {
                              getScatterDimsToOperandDims()),
               std::make_pair("index_vector_dim", getIndexVectorDim()));
 }
-Attribute ScatterDimensionNumbersAttr::parse(AsmParser& parser, Type  /*type*/) {
+Attribute ScatterDimensionNumbersAttr::parse(AsmParser& parser, Type /*type*/) {
   if (failed(parser.parseLess())) return {};
   SmallVector<int64_t> updateWindowDims;
   SmallVector<int64_t> insertedWindowDims;
@@ -6067,7 +6067,7 @@ void GatherDimensionNumbersAttr::print(AsmPrinter& printer) const {
               std::make_pair("index_vector_dim", getIndexVectorDim()));
 }
 
-Attribute GatherDimensionNumbersAttr::parse(AsmParser& parser, Type  /*type*/) {
+Attribute GatherDimensionNumbersAttr::parse(AsmParser& parser, Type /*type*/) {
   if (failed(parser.parseLess())) return {};
 
   SmallVector<int64_t> offsetDims;
@@ -6105,7 +6105,7 @@ void DotDimensionNumbersAttr::print(AsmPrinter& printer) const {
                      getRhsContractingDimensions()));
 }
 
-Attribute DotDimensionNumbersAttr::parse(AsmParser& parser, Type  /*type*/) {
+Attribute DotDimensionNumbersAttr::parse(AsmParser& parser, Type /*type*/) {
   if (failed(parser.parseLess())) return {};
 
   SmallVector<int64_t> lhsBatchingDimensions;
@@ -6471,7 +6471,7 @@ ParseResult parseConvolutionDimensions(AsmParser& parser,
   return success();
 }
 
-Attribute ConvDimensionNumbersAttr::parse(AsmParser& parser, Type  /*type*/) {
+Attribute ConvDimensionNumbersAttr::parse(AsmParser& parser, Type /*type*/) {
   if (failed(parser.parseLess())) return {};
   ConvDimensionNumbersAttr dnums;
   if (succeeded(parser.parseOptionalKeyword("raw"))) {
@@ -6510,7 +6510,7 @@ void ArgResultAliasAttr::print(AsmPrinter& printer) const {
   printer << ">";
 }
 
-Attribute ArgResultAliasAttr::parse(AsmParser& parser, Type  /*type*/) {
+Attribute ArgResultAliasAttr::parse(AsmParser& parser, Type /*type*/) {
   if (failed(parser.parseLess())) return {};
   llvm::SmallVector<int64_t> argTupleIndices;
   // The first element of result indices holds the aliased result index and the

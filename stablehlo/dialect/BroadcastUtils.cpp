@@ -18,10 +18,10 @@ limitations under the License.
 
 #include <algorithm>
 
-#include "mlir/Dialect/Shape/IR/Shape.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Sequence.h"
 #include "llvm/ADT/SmallVector.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
 
 namespace mlir {
 namespace hlo {
