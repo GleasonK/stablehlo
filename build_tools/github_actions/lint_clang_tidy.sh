@@ -43,7 +43,7 @@ echo "Configuring and building LLVM..."
 $BUILD_TOOLS_DIR/ci_build_llvm.sh "$1" "$2" > /dev/null
 
 echo "Configuring StableHLO..."
-$BUILD_TOOLS_DIR/ci_build_stablehlo_python_api.sh -n "$LLVM_PROJECT_DIR" "$STABLEHLO_BUILD_DIR" $(pwd) > /dev/null
+$BUILD_TOOLS_DIR/ci_build_stablehlo.sh -n "$LLVM_PROJECT_DIR" "$STABLEHLO_BUILD_DIR" > /dev/null
 
 # Exclude python files since the current build is only for source files.
 echo "Running clang-tidy..."
