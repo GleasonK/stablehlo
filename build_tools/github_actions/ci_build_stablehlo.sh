@@ -22,13 +22,13 @@
 
 print_usage() {
   echo "Usage: $0 [-n] <llvm_build_dir> <stablehlo_build_dir>"
-  echo "  -n   Do not build StableHLO"
+  echo "  -n   Do not run StableHLO tests"
 }
 
-DO_BUILD='true'
+DO_CHECK='true'
 while getopts 'n' flag; do
   case "${flag}" in
-    n) DO_BUILD='false' ;;
+    n) DO_CHECK='false' ;;
     *) print_usage
        exit 1 ;;
   esac
@@ -57,7 +57,9 @@ cmake -GNinja \
   -DCMAKE_C_COMPILER_LAUNCHER=ccache
 
 # Build and Check StableHLO
-if [[ $DO_BUILD == 'true' ]]; then
-  cd "$STABLEHLO_BUILD_DIR"
+cd "$STABLEHLO_BUILD_DIR"
+if [[ $DO_CHECK == 'true' ]]; then
   ninja check-stablehlo
+else
+  ninja
 fi
