@@ -40,9 +40,10 @@ BUILD_TOOLS_DIR="$(dirname "$(readlink -f "$0")")"
 
 set -x
 echo "Configuring and building LLVM..."
-$BUILD_TOOLS_DIR/ci_build_llvm.sh "$1" "$2" > /dev/null
+$BUILD_TOOLS_DIR/ci_build_llvm.sh "$LLVM_PROJECT_DIR" "$LLVM_BUILD_DIR" > /dev/null
 
 echo "Configuring StableHLO..."
+rm -rf "$STABLEHLO_BUILD_DIR"
 $BUILD_TOOLS_DIR/ci_build_stablehlo.sh -n "$LLVM_PROJECT_DIR" "$STABLEHLO_BUILD_DIR" > /dev/null
 
 # Exclude python files since the current build is only for source files.
