@@ -19,7 +19,7 @@ print_usage() {
 FIX_FLAG=''
 while getopts 'f' flag; do
   case "${flag}" in
-    f) ='-fix' ;;
+    f) FIX_FLAG="-fix" ;;
     *) print_usage
        exit 1 ;;
   esac
