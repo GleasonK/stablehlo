@@ -43,8 +43,7 @@ echo "Configuring and building LLVM..."
 $BUILD_TOOLS_DIR/ci_build_llvm.sh "$LLVM_PROJECT_DIR" "$LLVM_BUILD_DIR" > /dev/null
 
 echo "Configuring StableHLO..."
-rm -rf "$STABLEHLO_BUILD_DIR"
-$BUILD_TOOLS_DIR/ci_build_stablehlo.sh -n "$LLVM_PROJECT_DIR" "$STABLEHLO_BUILD_DIR" > /dev/null
+$BUILD_TOOLS_DIR/ci_build_stablehlo.sh -n "$LLVM_BUILD_DIR" "$STABLEHLO_BUILD_DIR" > /dev/null
 
 # Exclude python files since the current build is only for source files.
 echo "Running clang-tidy..."
@@ -55,5 +54,7 @@ CLANG_TIDY_FILES=$(git diff --name-only HEAD $BASE_BRANCH | \
                    xargs)
 
 clang-tidy $FIX_FLAG -p $STABLEHLO_BUILD_DIR -warnings-as-errors='*' $CLANG_TIDY_FILES
-echo $?
+CLANG_STATUS="$?"
 set +x
+
+exit $CLANG_STATUS
