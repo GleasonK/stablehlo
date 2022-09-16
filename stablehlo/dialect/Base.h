@@ -275,7 +275,6 @@ class CompatibleOperandsAndResultType
     Attribute encoding = nullptr;
     if (llvm::any_of(inferredBounds,
                      [](auto el) { return el != ShapedType::kDynamicSize; })) {
-      assert(dialect);
       encoding = dialect->createBoundedAttr(inferredBounds);
     }
     inferredReturnTypes.push_back(RankedTensorType::get(
