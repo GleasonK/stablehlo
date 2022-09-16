@@ -26,13 +26,10 @@ jobs:
           chmod +x /tmp/git-clang-format
       - name: Checking out repository
         uses: actions/checkout@v2
-      - name: Fetching Base Branch
-        # We have to explicitly fetch the base branch as well
-        run: git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
       - name: Running clang-format on changed source files
         run: |
-          /tmp/git-clang-format "${GITHUB_BASE_REF?}" --style=google
-          git diff --exit-code
+          git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
+          ./build_tools/github_actions/lint_clang_format.sh
 
   clang-tidy:
     env:
@@ -65,5 +62,5 @@ jobs:
     - name: Configure and run clang-tidy
       shell: bash
       run: |
-        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+        git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
         ./build_tools/github_actions/lint_clang_tidy.sh "$LLVM_PROJECT_DIR" "$LLVM_BUILD_DIR" "$STABLEHLO_BUILD_DIR" 
