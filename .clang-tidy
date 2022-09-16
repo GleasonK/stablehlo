@@ -1,6 +1,8 @@
 Checks: >
         # LINT.IfChange(checks)
-        -*,clang-diagnostic-*,llvm-*,misc-*,
+        -*,clang-diagnostic-*,llvm-*,
+        -llvm-header-guard, # StableHLO doens't use include dirs
+        misc-*,
         -misc-const-correctness,
         -misc-unused-parameters,
         -misc-non-private-member-variables-in-classes,
@@ -47,7 +49,7 @@ Checks: >
         readability-avoid-const-params-in-decls,
         readability-const-return-type,
         readability-container-size-empty,
-        readability-identifier-naming,
+        # readability-identifier-naming, # This conflicts the google style guide for members `var_`
         readability-inconsistent-declaration-parameter-name,
         readability-misleading-indentation,
         readability-redundant-control-flow,

@@ -19,8 +19,6 @@ limitations under the License.
 
 #include <algorithm>
 
-#include "llvm/ADT/Sequence.h"
-#include "llvm/ADT/SmallVector.h"
 #include "mlir/Bytecode/BytecodeImplementation.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -35,6 +33,8 @@ limitations under the License.
 #include "mlir/IR/Value.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Support/LogicalResult.h"
+#include "llvm/ADT/Sequence.h"
+#include "llvm/ADT/SmallVector.h"
 
 // Include order matters
 #include "stablehlo/dialect/BaseAttrInterfaces.h.inc"
@@ -275,6 +275,7 @@ class CompatibleOperandsAndResultType
     Attribute encoding = nullptr;
     if (llvm::any_of(inferredBounds,
                      [](auto el) { return el != ShapedType::kDynamicSize; })) {
+      assert(dialect);
       encoding = dialect->createBoundedAttr(inferredBounds);
     }
     inferredReturnTypes.push_back(RankedTensorType::get(

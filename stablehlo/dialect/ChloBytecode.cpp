@@ -15,12 +15,12 @@ limitations under the License.
 
 #include "stablehlo/dialect/ChloBytecode.h"
 
-#include "llvm/ADT/TypeSwitch.h"
-#include "llvm/Support/Debug.h"
 #include "mlir/Bytecode/BytecodeImplementation.h"
 #include "mlir/IR/Diagnostics.h"
 #include "stablehlo/dialect/Base.h"
 #include "stablehlo/dialect/ChloOps.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/Debug.h"
 
 //===----------------------------------------------------------------------===//
 // Debug Trace Helpers
@@ -231,7 +231,7 @@ Type ChloBytecodeInterface::readType(DialectBytecodeReader &reader) const {
 
 // TO ADD TYPE: Update the case selection to include the new type.
 LogicalResult ChloBytecodeInterface::writeType(
-    Type type, DialectBytecodeWriter &writer) const {
+    Type type, DialectBytecodeWriter & /*writer*/) const {
   return TypeSwitch<Type, LogicalResult>(type).Default([&](Type) {
     LOG_NOT_IMPLEMENTED;
     return failure();

@@ -14,12 +14,12 @@ limitations under the License.
 ==============================================================================*/
 
 #include "stablehlo/dialect/StablehloBytecode.h"
+#include "stablehlo/dialect/StablehloOps.h"
 
-#include "llvm/ADT/TypeSwitch.h"
-#include "llvm/Support/Debug.h"
 #include "mlir/Bytecode/BytecodeImplementation.h"
 #include "mlir/IR/Diagnostics.h"
-#include "stablehlo/dialect/StablehloOps.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/Debug.h"
 
 //===----------------------------------------------------------------------===//
 // Debug Trace Helpers
@@ -185,7 +185,7 @@ namespace {
 /// This class implements the bytecode interface for the StableHLO dialect.
 class StablehloBytecodeInterface : public BytecodeDialectInterface {
  public:
-  StablehloBytecodeInterface(Dialect *dialect)
+  explicit StablehloBytecodeInterface(Dialect *dialect)
       : BytecodeDialectInterface(dialect) {}
 
   //===--------------------------------------------------------------------===//
@@ -666,7 +666,7 @@ LogicalResult StablehloBytecodeInterface::writeType(
       });
 }
 
-void StablehloBytecodeInterface::write(TokenType type,
+void StablehloBytecodeInterface::write(TokenType /*type*/,
                                        DialectBytecodeWriter &writer) const {
   writer.writeVarInt(stablehlo_encoding::kTokenType);
 }

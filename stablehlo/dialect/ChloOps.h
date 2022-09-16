@@ -18,7 +18,6 @@ limitations under the License.
 #define STABLEHLO_DIALECT_CHLO_OPS_H
 
 #include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Quant/QuantTypes.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -36,6 +35,7 @@ limitations under the License.
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "stablehlo/dialect/Base.h"
+#include "llvm/ADT/StringRef.h"
 
 // Include order matters
 #include "stablehlo/dialect/ChloEnums.h.inc"

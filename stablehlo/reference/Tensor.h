@@ -19,10 +19,10 @@ limitations under the License.
 #include <vector>
 
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
-#include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "stablehlo/reference/Element.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace mlir {
 namespace stablehlo {
@@ -41,7 +41,7 @@ class Buffer : public llvm::RefCountedBase<Buffer> {
   /// @}
 
   /// Assignment operator.
-  Buffer &operator=(Buffer &&other) = default;
+  Buffer &operator=(Buffer &&other) = delete;
 
   /// Returns type of the Buffer object.
   ShapedType getType() { return type_; }
@@ -102,7 +102,7 @@ class Tensor {
 };
 
 /// Print utilities for Tensor objects.
-inline raw_ostream &operator<<(raw_ostream &os, Tensor tensor) {
+inline raw_ostream &operator<<(raw_ostream &os, const Tensor& tensor) {
   tensor.print(os);
   return os;
 }
