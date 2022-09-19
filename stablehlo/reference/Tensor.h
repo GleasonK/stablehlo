@@ -19,10 +19,10 @@ limitations under the License.
 #include <vector>
 
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
-#include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "stablehlo/reference/Element.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace mlir {
 namespace stablehlo {

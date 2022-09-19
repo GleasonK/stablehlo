@@ -16,12 +16,12 @@ limitations under the License.
 
 #include "stablehlo/dialect/Base.h"
 
-#include "llvm/ADT/TypeSwitch.h"
 #include "mlir/Dialect/Quant/QuantTypes.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/TypeUtilities.h"
 #include "mlir/Support/LLVM.h"
+#include "llvm/ADT/TypeSwitch.h"
 
 // Include order matters
 #include "stablehlo/dialect/BaseAttrInterfaces.cpp.inc"
