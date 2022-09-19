@@ -57,5 +57,6 @@ jobs:
     - name: Configure and run clang-tidy
       shell: bash
       run: |
+        sudo apt install -y clang-tidy-14
         git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
         ./build_tools/github_actions/lint_clang_tidy.sh "$LLVM_PROJECT_DIR" "$LLVM_BUILD_DIR" "$STABLEHLO_BUILD_DIR" 

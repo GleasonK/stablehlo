@@ -53,7 +53,7 @@ CLANG_TIDY_FILES=$(git diff --name-only HEAD $BASE_BRANCH | \
                    grep -v "/python/" | \
                    xargs)
 
-clang-tidy $FIX_FLAG -p $STABLEHLO_BUILD_DIR -warnings-as-errors='*' $CLANG_TIDY_FILES
+clang-tidy-14 $FIX_FLAG -p $STABLEHLO_BUILD_DIR -warnings-as-errors='*' $CLANG_TIDY_FILES
 CLANG_STATUS="$?"
 set +x
 
