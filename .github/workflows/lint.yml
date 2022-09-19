@@ -2,7 +2,17 @@
 
 name: Lint
 
-on: [pull_request]
+on: 
+  pull_request:
+    paths-ignore: ['**.md', 'docs/**']
+
+# Ensure that only a single job or workflow using the same
+# concurrency group will run at a time. This would cancel
+# any in-progress jobs in the same github workflow and github
+# ref (e.g. refs/heads/main or refs/pull/<pr_number>/merge).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   clang-format:
@@ -16,10 +26,37 @@ jobs:
           chmod +x /tmp/git-clang-format
       - name: Checking out repository
         uses: actions/checkout@v2
-      - name: Fetching Base Branch
-        # We have to explicitly fetch the base branch as well
-        run: git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
       - name: Running clang-format on changed source files
         run: |
-          /tmp/git-clang-format "${GITHUB_BASE_REF?}" --style=google
-          git diff --exit-code
+          git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
+          ./build_tools/github_actions/lint_clang_format.sh
+
+  clang-tidy:
+    env:
+      LLVM_PROJECT_DIR: "llvm-project"
+      LLVM_BUILD_DIR: "llvm-build"
+      STABLEHLO_BUILD_DIR: "stablehlo-build"
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout StableHLO
+      uses: actions/checkout@v2
+
+    # Read LLVM version from `build_tools/llvm_version.txt`
+    - name: Get LLVM Version
+      id: llvm-version
+      shell: bash
+      run: |
+        echo "::set-output name=version::$(cat ${{ github.workspace }}/build_tools/llvm_version.txt)"
+
+    # Check out LLVM, and install tools for compilation 
+    - name: Setup workspace
+      uses: ./.github/actions/setup-build
+      with:
+        llvm-version: ${{ steps.llvm-version.outputs.version }}
+
+    - name: Configure and run clang-tidy
+      shell: bash
+      run: |
+        sudo apt install -y clang-tidy-14
+        git fetch --no-tags --prune --depth=1 origin "${GITHUB_BASE_REF?}:${GITHUB_BASE_REF?}"
+        ./build_tools/github_actions/lint_clang_tidy.sh "$LLVM_PROJECT_DIR" "$LLVM_BUILD_DIR" "$STABLEHLO_BUILD_DIR" 
