@@ -34,6 +34,49 @@ def VersionedInterface : OpInterface<"VersionedInterface"> {
   ];
 }
 
+def VHLO_VersionedAttrInterface : AttrInterface<"VersionedAttrInterface"> {
+  let cppNamespace = "::mlir::vhlo";
+  let methods = [
+    InterfaceMethod<
+      "Returns the minimum version an attribute is supported in.",
+      "mlir::vhlo::Version", "getMinVersion">,
+    InterfaceMethod<
+      "Returns the maximum verison an attribute is supported in.",
+      "mlir::vhlo::Version", "getMaxVersion">,
+  ];
+}
+
+def VHLO_VersionedTypeInterface : TypeInterface<"VersionedTypeInterface"> {
+  let cppNamespace = "::mlir::vhlo";
+  let methods = [
+    InterfaceMethod<
+      "Returns the minimum version an attribute is supported in.",
+      "mlir::vhlo::Version", "getMinVersion">,
+    InterfaceMethod<
+      "Returns the maximum verison an attribute is supported in.",
+      "mlir::vhlo::Version", "getMaxVersion">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// VHLO Type Versioning
+//===----------------------------------------------------------------------===//
+
+class VHLO_TypeDef<string name,
+                   string minVersion = "0.3.0",
+                   string maxVersion = "current">
+  : TypeDef<VHLO_Dialect, name, [VHLO_VersionedTypeInterface]> {
+  let extraClassDeclaration = [{
+    mlir::vhlo::Version getMinVersion() {
+      return *mlir::vhlo::Version::fromString("}] #  minVersion # [{");
+    }
+    mlir::vhlo::Version getMaxVersion() {
+      if (!strcmp("}] # maxVersion # [{", "current")) return VhloDialect::getCurrentVersion();
+      return *mlir::vhlo::Version::fromString("}] #  maxVersion # [{");
+    }
+  }];
+}
+
 //===----------------------------------------------------------------------===//
 // VHLO Type Definitions.
 //===----------------------------------------------------------------------===//
@@ -114,7 +157,17 @@ def VHLO_QuantizedInt :
 defvar BroadcastDimAttr = I64ElementsAttr;
 
 // Token type.
-def VHLO_Token : Type<CPred<"$_self.isa<TokenType>()">, "token">;
+def VHLO_Token : VHLO_TypeDef<"Token", "0.3.0", "0.3.0"> {
+  let mnemonic = "token";
+}
+
+def VHLO_TokenV2 : VHLO_TypeDef<"TokenV2", "0.4.0"> {
+  let summary = [{
+    TokenV2 is introduced for testing type conversions and legality checks.
+    There are no semantic differences between Token and TokenV2.
+  }];
+  let mnemonic = "token_v2";
+}
 
 // Any integer tensor types
 def VHLO_IntTensor : TensorOf<[VHLO_Int]>;
@@ -137,11 +190,11 @@ def VHLO_Tensor : TensorOf<[VHLO_Float, VHLO_Pred, VHLO_Int, VHLO_Complex, VHLO_
 
 def VHLO_ComplexTensor : TensorOf<[VHLO_Complex]>;
 
-def VHLO_Tuple : NestedTupleOf<[VHLO_Tensor, VHLO_Token]>;
+def VHLO_Tuple : NestedTupleOf<[VHLO_Tensor, VHLO_Token, VHLO_TokenV2]>;
 
-def VHLO_TensorOrToken : AnyTypeOf<[VHLO_Tensor, VHLO_Token]>;
+def VHLO_TensorOrToken : AnyTypeOf<[VHLO_Tensor, VHLO_Token, VHLO_TokenV2]>;
 
-def VHLO_TensorOrTokenOrTuple : AnyTypeOf<[VHLO_Tensor, VHLO_Token, VHLO_Tuple]>;
+def VHLO_TensorOrTokenOrTuple : AnyTypeOf<[VHLO_Tensor, VHLO_Token, VHLO_TokenV2, VHLO_Tuple]>;
 
 def VHLO_DimensionValue : AnyTypeOf<[Index, VHLO_Int]>;
 

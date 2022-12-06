@@ -43,14 +43,14 @@ class Version {
   int64_t getMinor() const { return majorMinorPatch[1]; }
   int64_t getPatch() const { return majorMinorPatch[2]; }
 
-  bool operator<(Version const& other) {
+  bool operator<(Version const& other) const {
     // Uses lexicographical_compare
     return majorMinorPatch < other.majorMinorPatch;
   }
-  bool operator==(Version const& other) {
+  bool operator==(Version const& other) const {
     return majorMinorPatch == other.majorMinorPatch;
   }
-  bool operator<=(Version const& other) {
+  bool operator<=(Version const& other) const {
     return majorMinorPatch <= other.majorMinorPatch;
   }
 
@@ -59,6 +59,13 @@ class Version {
 };
 
 mlir::Diagnostic& operator<<(mlir::Diagnostic& diag, const Version& version);
+
+template <typename VersionedInterface>
+bool isLegalVersionForTarget(VersionedInterface& interface,
+                             Version const& target) {
+  return interface.getMinVersion() <= target &&
+         target <= interface.getMaxVersion();
+}
 
 }  // namespace vhlo
 }  // namespace mlir

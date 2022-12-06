@@ -80,7 +80,7 @@ def VHLO_DynamicIotaOpV1 : VHLO_Op<"dynamic_iota"> {
 }
 
 def VHLO_CreateTokenOpV1 : VHLO_Op<"create_token"> {
-  let results = (outs VHLO_Token:$output);
+  let results = (outs AnyType:$output);
 }
 
 def VHLO_AbsOpV1 : VHLO_Op<"abs"> {
@@ -277,7 +277,7 @@ def VHLO_XorOpV1 : VHLO_Op<"xor"> {
 
 def VHLO_ReturnOpV1 : VHLO_Op<"return", "0.3.0", "current", [Terminator]> {
   let arguments = (ins
-    Variadic<VHLO_TensorOrTokenOrTuple >:$results
+    Variadic<VHLO_TensorOrTokenOrTuple>:$results
   );
   let assemblyFormat = "$results attr-dict (`:` type($results)^)?";
 }
@@ -285,7 +285,7 @@ def VHLO_ReturnOpV1 : VHLO_Op<"return", "0.3.0", "current", [Terminator]> {
 // Communication op definitions.
 def VHLO_InfeedOpV1 : VHLO_Op<"infeed"> {
   let arguments = (ins
-    VHLO_Token:$token,
+    AnyType:$token,
     DefaultValuedStrAttr<StrAttr, "">:$infeed_config,
     OptionalAttr<ArrayAttr>:$layout
   );
@@ -295,25 +295,25 @@ def VHLO_InfeedOpV1 : VHLO_Op<"infeed"> {
 def VHLO_OutfeedOpV1 : VHLO_Op<"outfeed"> {
   let arguments = (ins
     Variadic<VHLO_Tensor>:$inputs,
-    VHLO_Token:$token,
+    AnyType:$token,
     DefaultValuedStrAttr<StrAttr, "">:$outfeed_config
   );
-  let results = (outs VHLO_Token);
+  let results = (outs AnyType);
 }
 
 def VHLO_SendOpV1 : VHLO_Op<"send"> {
   let arguments = (ins
     Variadic<VHLO_Tensor>:$inputs,
-    VHLO_Token:$token,
+    AnyType:$token,
     VHLO_ChannelHandle:$channel_handle,
     DefaultValuedOptionalAttr<BoolAttr, "false">:$is_host_transfer
   );
-  let results = (outs VHLO_Token);
+  let results = (outs AnyType);
 }
 
 def VHLO_RecvOpV1 : VHLO_Op<"recv"> {
   let arguments = (ins
-    VHLO_Token:$token,
+    AnyType:$token,
     VHLO_ChannelHandle:$channel_handle,
     DefaultValuedOptionalAttr<BoolAttr, "false">:$is_host_transfer
   );
@@ -331,8 +331,8 @@ def VHLO_PartitionIdOpV1 : VHLO_Op<"partition_id", "0.4.0"> {
 
 // Control flow op definitions.
 def VHLO_AfterAllOpV1 : VHLO_Op<"after_all"> {
-  let arguments = (ins Variadic<VHLO_Token>:$inputs);
-  let results = (outs VHLO_Token:$result);
+  let arguments = (ins Variadic<AnyType>:$inputs);
+  let results = (outs AnyType:$result);
 }
 
 def VHLO_IfOpV1 : VHLO_Op<"if"> {

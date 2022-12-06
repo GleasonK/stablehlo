@@ -12,14 +12,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include <algorithm>
 #include <climits>
 #include <memory>
 #include <utility>
 
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Debug.h"
+#include "mlir/IR/Attributes.h"
 #include "mlir/IR/Diagnostics.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/Support/LLVM.h"
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "stablehlo/dialect/Version.h"
@@ -77,6 +82,69 @@ FailureOr<Version> validateTargetVersion(llvm::StringRef versionRef,
   return targetVersion;
 }
 
+template <typename AttrOrType>
+bool isDialect(AttrOrType at, llvm::StringRef dialectName) {
+  return (at.getDialect().getNamespace() == dialectName);
+}
+
+bool isLegalAttribute(Operation* op, NamedAttribute const& attr,
+                      Version targetVersion) {
+  // TODO: Remove once builtin types are forked.
+  if (isDialect(attr.getValue(), "builtin")) {
+    return true;
+  }
+
+  auto attrInterface = dyn_cast<VersionedAttrInterface>(attr.getValue());
+  if (attrInterface && isLegalVersionForTarget(attrInterface, targetVersion)) {
+    return true;
+  }
+
+  op->emitError() << "failed to legalize attribute " << attr.getName()
+                  << " to version " << targetVersion;
+  return false;
+}
+
+bool isLegalType(Operation* op, Type const& type,
+                 Version const& targetVersion) {
+  // TODO: Remove once builtin types are forked.
+  if (isDialect(type, "builtin") || isDialect(type, "shape")) {
+    return true;
+  }
+
+  auto typeInterface = dyn_cast<VersionedTypeInterface>(type);
+  if (typeInterface && isLegalVersionForTarget(typeInterface, targetVersion)) {
+    return true;
+  }
+
+  op->emitError() << "failed to legalize type " << type << " to version "
+                  << targetVersion;
+  return false;
+}
+
+bool isLegalOpInTargetVersion(Operation* op, Version const& targetVersion) {
+  // Validate op
+  auto opInterface = dyn_cast<VersionedInterface>(op);
+  if (!opInterface) return false;
+  if (!isLegalVersionForTarget(opInterface, targetVersion)) return false;
+
+  // Validate attributes
+  auto isLegalAttrFn = [&](NamedAttribute const& attr) {
+    return isLegalAttribute(op, attr, targetVersion);
+  };
+  if (!llvm::all_of(op->getAttrs(), isLegalAttrFn)) return false;
+
+  // Validate types
+  auto isLegalTypeFn = [&](Type const& t) {
+    return isLegalType(op, t, targetVersion);
+  };
+  if (!llvm::all_of(op->getOperandTypes(), isLegalTypeFn) ||
+      !llvm::all_of(op->getResultTypes(), isLegalTypeFn)) {
+    return false;
+  }
+
+  return true;
+}
+
 using stablehlo::VhloToVersionPassOptions;
 using stablehlo::impl::VhloToVersionPassBase;
 struct VhloToVersionPass : public VhloToVersionPassBase<VhloToVersionPass> {
@@ -114,14 +182,10 @@ struct VhloToVersionPass : public VhloToVersionPassBase<VhloToVersionPass> {
     //   V1 legal   { 0.0  in [0.0, 0.1] }
     target.addDynamicallyLegalDialect<VhloDialect>(
         [&targetVersion](Operation* op) {
-          if (auto interface = dyn_cast<VersionedInterface>(op)) {
-            return (interface.getMinVersion() <= targetVersion &&
-                    targetVersion <= interface.getMaxVersion());
-          }
-          return false;
+          return isLegalOpInTargetVersion(op, targetVersion);
         });
 
-    vhlo::VhloToVersionConverter converter;
+    vhlo::VhloToVersionConverter converter(targetVersion);
     RewritePatternSet patterns(&getContext());
     stablehlo::populateVhloToVersionPatterns(&patterns, &converter,
                                              &getContext());
@@ -175,7 +239,6 @@ struct VersionConversionPattern : OpConversionPattern<SourceOp> {
 // vhlo.custom_call --> vhlo.custom_call_v2
 struct CustomCallOpV1ToV2
     : public VersionConversionPattern<CustomCallOpV1, CustomCallOpV2> {
-  using VersionConversionPattern::VersionConversionPattern;
   LogicalResult prepareOpForConversion(CustomCallOpV1) const final {
     return success();
   }
@@ -242,6 +305,33 @@ struct AllGatherOpV2ToV1
   }
 };
 
+// Types and Attrs
+template <typename SourceOp>
+struct TypeAndAttrConversionPattern : OpConversionPattern<SourceOp> {
+  using OpConversionPattern<SourceOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(
+      SourceOp op, typename SourceOp::Adaptor /*adaptor*/,
+      ConversionPatternRewriter& rewriter) const override {
+
+    auto newOp = rewriter.replaceOpWithNewOp<SourceOp>(
+        op, op->getResultTypes(), op->getOperands(), op->getAttrs());
+    for (auto [oldRegion, newRegion] :
+         llvm::zip(op->getRegions(), newOp->getRegions())) {
+      rewriter.inlineRegionBefore(oldRegion, newRegion, newRegion.end());
+    }
+    return success();
+  }
+};
+
+template <typename... VhloOpTypes>
+void populateAttrTypeConversionPatterns(RewritePatternSet* patterns,
+                                        TypeConverter* converter,
+                                        MLIRContext* context) {
+  patterns->add<TypeAndAttrConversionPattern<VhloOpTypes>...>(*converter,
+                                                              context);
+}
+
 }  // namespace
 }  // namespace vhlo
 
@@ -255,6 +345,8 @@ void populateVhloToVersionPatterns(RewritePatternSet* patterns,
   patterns->add<vhlo::CollectivePermuteOpV2ToV1>(*converter, context);
   patterns->add<vhlo::AllGatherOpV1ToV2>(*converter, context);
   patterns->add<vhlo::AllGatherOpV2ToV1>(*converter, context);
+
+  vhlo::populateAttrTypeConversionPatterns<vhlo::CreateTokenOpV1>(patterns, converter, context);
 }
 
 }  // namespace stablehlo

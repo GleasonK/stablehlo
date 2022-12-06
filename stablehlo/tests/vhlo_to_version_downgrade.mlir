@@ -39,3 +39,10 @@ func.func @custom_call_to_v1_empty_output_operand_alias(%arg0 : tensor<f32>) -> 
   } : (tensor<f32>) -> tensor<f32>
   func.return %0 : tensor<f32>
 }
+
+// CHECK-LABEL: @token_type_v2_to_v1
+func.func @token_type_v2_to_v1() -> !stablehlo.token {
+  // CHECK-NEXT: %0 = "vhlo.create_token"(%arg0)
+  %0 = stablehlo.create_token : !stablehlo.token
+  func.return %0 : !stablehlo.token
+}

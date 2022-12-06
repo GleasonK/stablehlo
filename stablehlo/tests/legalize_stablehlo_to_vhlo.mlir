@@ -1,5 +1,5 @@
 // RUN: stablehlo-opt --stablehlo-legalize-to-vhlo --mlir-print-op-generic --split-input-file %s | FileCheck %s
-// RUN: diff <(stablehlo-opt --stablehlo-legalize-to-vhlo --vhlo-legalize-to-stablehlo stablehlo/tests/legalize_stablehlo_to_vhlo.mlir) <(stablehlo-opt stablehlo/tests/legalize_stablehlo_to_vhlo.mlir)
+// RUN: diff <(stablehlo-opt --stablehlo-legalize-to-vhlo %s | stablehlo-opt --vhlo-legalize-to-stablehlo) <(stablehlo-opt %s)
 // RUN: stablehlo-opt --stablehlo-legalize-to-vhlo -emit-bytecode -debug-only=vhlo-bytecode %s 2>&1 | (! grep 'Not Implemented')
 // RUN: stablehlo-opt --stablehlo-legalize-to-vhlo -emit-bytecode %s | stablehlo-opt -debug-only=vhlo-bytecode 2>&1 | (! grep 'Not Implemented')
 
@@ -333,7 +333,7 @@ func.func @op_add(%arg0: tensor<f32>, %arg1: tensor<f32>) -> tensor<f32> {
 // CHECK-LABEL: "op_add"
 
 func.func @op_after_all(%arg0: !stablehlo.token) -> !stablehlo.token {
-  // CHECK: "vhlo.after_all"(%arg0) : (!vhlo.token) -> !vhlo.token
+  // CHECK: "vhlo.after_all"(%arg0) : (!vhlo.token_v2) -> !vhlo.token_v2
   %0 = "stablehlo.after_all"(%arg0) : (!stablehlo.token) -> !stablehlo.token
   func.return %0 : !stablehlo.token
 }
@@ -632,7 +632,7 @@ func.func @op_cosine(%arg0: tensor<f32>) -> tensor<f32> {
 // CHECK-LABEL: "op_cosine"
 
 func.func @op_create_token() -> !stablehlo.token {
-  // CHECK: "vhlo.create_token"() : () -> !vhlo.token
+  // CHECK: "vhlo.create_token"() : () -> !vhlo.token_v2
   %0 = "stablehlo.create_token"() : () -> !stablehlo.token
   func.return %0 : !stablehlo.token
 }
@@ -957,7 +957,7 @@ func.func @op_infeed(%arg0: !stablehlo.token) -> (tensor<f32>, !stablehlo.token)
   //               CHECK: "vhlo.infeed"(%arg0) {
   //          CHECK-SAME:   infeed_config = "",
   // CHECK-SAME{LITERAL}:   layout = [[]]
-  //          CHECK-SAME: } : (!vhlo.token) -> (tensor<f32>, !vhlo.token)
+  //          CHECK-SAME: } : (!vhlo.token_v2) -> (tensor<f32>, !vhlo.token_v2)
   %0:2 = "stablehlo.infeed"(%arg0) {
     infeed_config = "",
     layout = [[]]
@@ -1076,7 +1076,7 @@ func.func @op_or(%arg0: tensor<i1>, %arg1: tensor<i1>) -> tensor<i1> {
 func.func @op_outfeed(%arg0: tensor<f32>, %arg1: !stablehlo.token) -> !stablehlo.token {
   //      CHECK: "vhlo.outfeed"(%arg0, %arg1) {
   // CHECK-SAME:   outfeed_config = ""
-  // CHECK-SAME: } : (tensor<f32>, !vhlo.token) -> !vhlo.token
+  // CHECK-SAME: } : (tensor<f32>, !vhlo.token_v2) -> !vhlo.token_v2
   %0 = "stablehlo.outfeed"(%arg0, %arg1) {
     outfeed_config = ""
   } : (tensor<f32>, !stablehlo.token) -> !stablehlo.token
@@ -1131,7 +1131,7 @@ func.func @op_recv(%arg0: !stablehlo.token) -> (tensor<f32>, !stablehlo.token) {
   //      CHECK: "vhlo.recv"(%arg0) {
   // CHECK-SAME:   channel_handle = #vhlo.channel_handle<handle = 0, type = 0>,
   // CHECK-SAME:   is_host_transfer = true
-  // CHECK-SAME: } : (!vhlo.token) -> (tensor<f32>, !vhlo.token)
+  // CHECK-SAME: } : (!vhlo.token_v2) -> (tensor<f32>, !vhlo.token_v2)
   %0:2 = "stablehlo.recv"(%arg0) {
     channel_handle = #stablehlo.channel_handle<handle = 0, type = 0>,
     is_host_transfer = true
@@ -1383,7 +1383,7 @@ func.func @op_send(%arg0: tensor<f32>, %arg1: !stablehlo.token) -> !stablehlo.to
   //      CHECK: "vhlo.send"(%arg0, %arg1) {
   // CHECK-SAME:   channel_handle = #vhlo.channel_handle<handle = 0, type = 0>,
   // CHECK-SAME:   is_host_transfer = true
-  // CHECK-SAME: } : (tensor<f32>, !vhlo.token) -> !vhlo.token
+  // CHECK-SAME: } : (tensor<f32>, !vhlo.token_v2) -> !vhlo.token_v2
   %0 = "stablehlo.send"(%arg0, %arg1) {
     channel_handle = #stablehlo.channel_handle<handle = 0, type = 0>,
     is_host_transfer = true
@@ -1755,24 +1755,24 @@ func.func @type_sparsity(%arg0: tensor<16xf32, #sparse_tensor.encoding<{ dimLeve
 // CHECK-LABEL: "type_sparsity"
 
 func.func @type_token_callee(%arg0: !stablehlo.token) -> !stablehlo.token {
-  // CHECK: "func.return"(%arg0) : (!vhlo.token) -> ()
+  // CHECK: "func.return"(%arg0) : (!vhlo.token_v2) -> ()
   return %arg0 : !stablehlo.token
 }
-//       CHECK: function_type = (!vhlo.token) -> !vhlo.token
+//       CHECK: function_type = (!vhlo.token_v2) -> !vhlo.token_v2
 // CHECK-LABEL: "type_token_callee"
 
 func.func @type_token_caller(%arg0: !stablehlo.token) -> !stablehlo.token {
-  // CHECK: "func.call"(%arg0) {callee = @type_token_callee} : (!vhlo.token) -> !vhlo.token
+  // CHECK: "func.call"(%arg0) {callee = @type_token_callee} : (!vhlo.token_v2) -> !vhlo.token_v2
   %0 = func.call @type_token_callee(%arg0) : (!stablehlo.token) -> !stablehlo.token
   return %0 : !stablehlo.token
 }
-//       CHECK: function_type = (!vhlo.token) -> !vhlo.token
+//       CHECK: function_type = (!vhlo.token_v2) -> !vhlo.token_v2
 // CHECK-LABEL: "type_token_caller"
 
 func.func @type_tuple(%arg0: tuple<tensor<f32>>) -> tuple<!stablehlo.token> {
   %0 = "stablehlo.custom_call"(%arg0) {
     call_target_name = "foo"
-  // CHECK: (tuple<tensor<f32>>) -> tuple<!vhlo.token>
+  // CHECK: (tuple<tensor<f32>>) -> tuple<!vhlo.token_v2>
   } : (tuple<tensor<f32>>) -> tuple<!stablehlo.token>
   return %0 : tuple<!stablehlo.token>
 }

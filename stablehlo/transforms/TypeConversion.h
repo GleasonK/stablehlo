@@ -17,8 +17,10 @@ limitations under the License.
 #define STABLEHLO_TRANSFORMS_TYPECONVERSION_H
 
 #include "llvm/Support/Debug.h"
+#include "mlir/Dialect/Func/Transforms/FuncConversions.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "stablehlo/dialect/StablehloOps.h"
+#include "stablehlo/dialect/Version.h"
 #include "stablehlo/dialect/VhloOps.h"
 
 #define DEBUG_TYPE "compat-passes"
@@ -62,7 +64,7 @@ class StablehloToVhloTypeConverter : public VersionedTypeConverterBase {
   StablehloToVhloTypeConverter() : VersionedTypeConverterBase() {
     addConversion([](stablehlo::TokenType token) -> Type {
       LLVM_DEBUG(llvm::dbgs() << "Converting TokenType\n");
-      return TokenType::get(token.getContext());
+      return TokenV2Type::get(token.getContext());
     });
   }
 
@@ -88,7 +90,7 @@ class StablehloToVhloTypeConverter : public VersionedTypeConverterBase {
 class VhloToStablehloTypeConverter : public VersionedTypeConverterBase {
  public:
   VhloToStablehloTypeConverter() : VersionedTypeConverterBase() {
-    addConversion([](vhlo::TokenType token) -> Type {
+    addConversion([](vhlo::TokenV2Type token) -> Type {
       LLVM_DEBUG(llvm::dbgs() << "Converting TokenType\n");
       return stablehlo::TokenType::get(token.getContext());
     });
@@ -108,20 +110,29 @@ class VhloToStablehloTypeConverter : public VersionedTypeConverterBase {
   }
 };
 
-class VhloToVersionConverter : public VersionedTypeConverterBase {
+class VhloToVersionConverter : public TypeConverter {
  public:
-  VhloToVersionConverter() : VersionedTypeConverterBase() {
-    addConversion([](stablehlo::TokenType token) -> Type {
-      LLVM_DEBUG(llvm::dbgs() << "Converting TokenType\n");
-      return TokenType::get(token.getContext());
+  VhloToVersionConverter(Version target) : TypeConverter() {
+    addConversion([&](Type t) -> Type {
+      if (auto interface = t.dyn_cast<VersionedTypeInterface>()) {
+        if (isLegalVersionForTarget(interface, target)) {
+          return t;
+        }
+        return {};
+      }
+      return t;
     });
-  }
 
-  bool isSourceDialect(Dialect& dialect) final {
-    return dialect.getNamespace() == vhlo::VhloDialect::getDialectNamespace();
+    if (target > Version::fromString("0.3.0")) {
+      LLVM_DEBUG(llvm::dbgs() << "Adding token --> token_v2\n");
+      addConversion(
+          [](TokenType t) -> Type { return TokenV2Type::get(t.getContext()); });
+    } else {
+      LLVM_DEBUG(llvm::dbgs() << "Adding token_v2 --> token\n");
+      addConversion(
+          [](TokenV2Type t) -> Type { return TokenType::get(t.getContext()); });
+    }
   }
-
-  Attribute convertEncoding(Attribute attr) final { return attr; }
 };
 
 // Complements conversion patterns with boilerplate that makes sure `func.func`,
