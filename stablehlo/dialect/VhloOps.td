@@ -736,7 +736,7 @@ def VHLO_ScatterOpV1 : VHLO_Op<"scatter", "0.3.0", "current", [SameVariadicOpera
     Variadic<VHLO_Tensor>:$inputs,
     TensorOf<[AnyInteger, Index]>:$scatter_indices,
     Variadic<VHLO_Tensor>:$updates,
-    VHLO_ScatterDimensionNumbers:$scatter_dimension_numbers,
+    AnyAttr:$scatter_dimension_numbers,
     DefaultValuedOptionalAttr<BoolAttr, "false">:$indices_are_sorted,
     DefaultValuedOptionalAttr<BoolAttr, "false">:$unique_indices
   );

@@ -50,9 +50,21 @@ def VHLO_Dims : ArrayRefParameter<"int64_t", "Dimension"> {
   let printer = "mlir::hlo::printDimSizes($_printer, $_self)";
 }
 
-def VHLO_ScatterDimensionNumbers : VHLO_AttrDef<"ScatterDimensionNumbers"> {
+def VHLO_ScatterDimensionNumbersV1 : VHLO_AttrDef<"ScatterDimensionNumbers", "0.3.0", "0.3.0"> {
   let cppNamespace = "::mlir::vhlo";
   let mnemonic = "scatter";
+  let parameters = (ins
+      VHLO_Dims:$updateWindowDims,
+      VHLO_Dims:$insertedWindowDims,
+      VHLO_Dims:$scatterDimsToOperandDims,
+      "int64_t":$indexVectorDim
+  );
+  let assemblyFormat = "`<` struct(params) `>`";
+}
+
+def VHLO_ScatterDimensionNumbersV2 : VHLO_AttrDef<"ScatterDimensionNumbersV2", "0.4.0"> {
+  let cppNamespace = "::mlir::vhlo";
+  let mnemonic = "scatter_v2";
   let parameters = (ins
       VHLO_Dims:$updateWindowDims,
       VHLO_Dims:$insertedWindowDims,

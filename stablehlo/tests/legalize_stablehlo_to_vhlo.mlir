@@ -1315,7 +1315,7 @@ func.func @op_scatter(%arg0: tensor<200x100x300xf32>, %arg1: tensor<10x2xi32>, %
   // CHECK-NEXT:     "vhlo.return"(%[[VAL1]]) : (tensor<f32>) -> ()
   // CHECK-NEXT: }) {
   // CHECK-SAME:  indices_are_sorted = true,
-  // CHECK-SAME:  scatter_dimension_numbers = #vhlo.scatter<
+  // CHECK-SAME:  scatter_dimension_numbers = #vhlo.scatter_v2<
   // CHECK-SAME:    updateWindowDims = [1],
   // CHECK-SAME:    insertedWindowDims = [0, 1],
   // CHECK-SAME:    scatterDimsToOperandDims = [0, 1],

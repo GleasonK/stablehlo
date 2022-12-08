@@ -97,7 +97,7 @@ Attribute convertAttrToVhlo(Attribute stablehloAttr) {
   }
   if (auto attr =
           stablehloAttr.dyn_cast<stablehlo::ScatterDimensionNumbersAttr>()) {
-    return vhlo::ScatterDimensionNumbersAttr::get(
+    return vhlo::ScatterDimensionNumbersV2Attr::get(
         attr.getContext(), attr.getUpdateWindowDims(),
         attr.getInsertedWindowDims(), attr.getScatterDimsToOperandDims(),
         attr.getIndexVectorDim());

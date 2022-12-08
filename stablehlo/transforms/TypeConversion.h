@@ -110,27 +110,44 @@ class VhloToStablehloTypeConverter : public VersionedTypeConverterBase {
   }
 };
 
-class VhloToVersionConverter : public TypeConverter {
+class VhloToVersionConverter : public VersionedTypeConverterBase {
  public:
-  VhloToVersionConverter(Version target) : TypeConverter() {
+  VhloToVersionConverter(Version target) : VersionedTypeConverterBase() {
     addConversion([&](Type t) -> Type {
       if (auto interface = t.dyn_cast<VersionedTypeInterface>()) {
-        if (isLegalVersionForTarget(interface, target)) {
-          return t;
-        }
-        return {};
+        return isLegalVersionForTarget(interface, target) ? t : Type{};
       }
+      // TODO: All types should be versioned
       return t;
     });
 
-    if (target > Version::fromString("0.3.0")) {
-      LLVM_DEBUG(llvm::dbgs() << "Adding token --> token_v2\n");
-      addConversion(
-          [](TokenType t) -> Type { return TokenV2Type::get(t.getContext()); });
+    addConditionalConversion(
+        target, *Version::fromString("0.3.0"),
+        [](TokenV2Type t) -> Type { return TokenType::get(t.getContext()); },
+        [](TokenType t) -> Type { return TokenV2Type::get(t.getContext()); });
+  }
+
+  bool isSourceDialect(Dialect& dialect) final {
+    return dialect.getNamespace() == vhlo::VhloDialect::getDialectNamespace();
+  }
+
+  Attribute convertEncoding(Attribute attr) final {
+    if (auto vhloAttr = attr.dyn_cast_or_null<vhlo::TypeExtensionsAttr>()) {
+      return stablehlo::TypeExtensionsAttr::get(vhloAttr.getContext(),
+                                                vhloAttr.getBounds());
+    }
+    // All encodings should be supported.
+    return attr;
+  }
+
+ private:
+  template <typename DowngradeFn, typename UpgradeFn>
+  void addConditionalConversion(Version const& target, Version const& version,
+                                DowngradeFn&& downgrade, UpgradeFn&& upgrade) {
+    if (target <= version) {
+      addConversion(downgrade);
     } else {
-      LLVM_DEBUG(llvm::dbgs() << "Adding token_v2 --> token\n");
-      addConversion(
-          [](TokenV2Type t) -> Type { return TokenType::get(t.getContext()); });
+      addConversion(upgrade);
     }
   }
 };

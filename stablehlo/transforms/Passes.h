@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
+#include "stablehlo/dialect/Version.h"
 
 namespace mlir {
 namespace stablehlo {
@@ -44,7 +45,8 @@ void populateVhloToStablehloPatterns(RewritePatternSet *patterns,
 // Populates VHLO downgrade rewriting patterns.
 void populateVhloToVersionPatterns(RewritePatternSet *patterns,
                                    TypeConverter *converter,
-                                   MLIRContext *contexts);
+                                   MLIRContext *contexts,
+                                   vhlo::Version const &target);
 }  // namespace stablehlo
 }  // namespace mlir
 

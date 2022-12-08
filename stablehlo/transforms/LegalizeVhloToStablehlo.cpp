@@ -91,7 +91,7 @@ Attribute convertAttrToStablehlo(Attribute vhloAttr) {
   if (auto attr = vhloAttr.dyn_cast<vhlo::RngDistributionAttr>()) {
     RETURN_CONVERTED_ENUM_ATTR(RngDistribution);
   }
-  if (auto attr = vhloAttr.dyn_cast<vhlo::ScatterDimensionNumbersAttr>()) {
+  if (auto attr = vhloAttr.dyn_cast<vhlo::ScatterDimensionNumbersV2Attr>()) {
     return stablehlo::ScatterDimensionNumbersAttr::get(
         attr.getContext(), attr.getUpdateWindowDims(),
         attr.getInsertedWindowDims(), attr.getScatterDimsToOperandDims(),

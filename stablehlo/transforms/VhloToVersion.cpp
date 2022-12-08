@@ -20,6 +20,7 @@ limitations under the License.
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Diagnostics.h"
@@ -189,7 +190,7 @@ struct VhloToVersionPass : public VhloToVersionPassBase<VhloToVersionPass> {
     vhlo::VhloToVersionConverter converter(targetVersion);
     RewritePatternSet patterns(&getContext());
     stablehlo::populateVhloToVersionPatterns(&patterns, &converter,
-                                             &getContext());
+                                             &getContext(), targetVersion);
     registerFuncOpsForTypeConversion(target, patterns, converter);
 
     // Conversions within VHLO may fail if new features or ops are used.
@@ -237,6 +238,32 @@ struct VersionConversionPattern : OpConversionPattern<SourceOp> {
 /////////////////////////////////////////
 /// Upgrade and Downgrade Definitions ///
 /////////////////////////////////////////
+
+Attribute convertAttrToVersion(Attribute&& attr, Version const& target) {
+  LLVM_DEBUG(llvm::dbgs() << "Converting " << attr << " to " << target);
+  Attribute newAttr = std::move(attr);
+  if (target <= Version::fromString("0.3.0")) {
+    // 0.4.0 --> 0.3.0
+    if (auto scatterAttr = attr.dyn_cast<ScatterDimensionNumbersV2Attr>()) {
+      LLVM_DEBUG(llvm::dbgs() << "Downgrading. " << attr << " to " << target);
+      newAttr = ScatterDimensionNumbersAttr::get(
+          attr.getContext(), scatterAttr.getUpdateWindowDims(),
+          scatterAttr.getInsertedWindowDims(),
+          scatterAttr.getScatterDimsToOperandDims(),
+          scatterAttr.getIndexVectorDim());
+    }
+  } else {
+    // 0.3.0 --> 0.4.0
+    if (auto scatterAttr = attr.dyn_cast<ScatterDimensionNumbersAttr>()) {
+      newAttr = ScatterDimensionNumbersV2Attr::get(
+          attr.getContext(), scatterAttr.getUpdateWindowDims(),
+          scatterAttr.getInsertedWindowDims(),
+          scatterAttr.getScatterDimsToOperandDims(),
+          scatterAttr.getIndexVectorDim());
+    }
+  }
+  return newAttr;
+}
 
 // vhlo.custom_call --> vhlo.custom_call_v2
 struct CustomCallOpV1ToV2
@@ -312,12 +339,16 @@ struct AllGatherOpV2ToV1
 template <typename SourceOp>
 struct TypeAndAttrConversionPattern : OpConversionPattern<SourceOp> {
   using OpConversionPattern<SourceOp>::OpConversionPattern;
+  TypeAndAttrConversionPattern(TypeConverter& typeConverter,
+                               MLIRContext* context, Version const& target)
+      : OpConversionPattern<SourceOp>::OpConversionPattern(typeConverter,
+                                                           context),
+        target(target) {}
 
   LogicalResult matchAndRewrite(
       SourceOp op, typename SourceOp::Adaptor adaptor,
       ConversionPatternRewriter& rewriter) const override {
     SmallVector<Type> vhloTypes;
-    LLVM_DEBUG(llvm::dbgs() << "Converting types:\n");
     if (failed(this->getTypeConverter()->convertTypes(op->getResultTypes(),
                                                       vhloTypes))) {
       LLVM_DEBUG(llvm::dbgs() << "Failed type conversion\n");
@@ -329,13 +360,11 @@ struct TypeAndAttrConversionPattern : OpConversionPattern<SourceOp> {
     ValueRange vhloOperands = adaptor.getOperands();
 
     SmallVector<NamedAttribute> vhloAttrs;
-    /*
     for (NamedAttribute attr : op->getAttrs()) {
-      // auto vhloAttr = convertAttrToVersion(attr.getValue());
-      // if (!vhloAttr) return failure();
-      // vhloAttrs.push_back({attr.getName(), vhloAttr});
+      auto vhloAttr = convertAttrToVersion(attr.getValue(), target);
+      if (!vhloAttr) return failure();
+      vhloAttrs.push_back({attr.getName(), vhloAttr});
     }
-    */
 
     // Convert the vhlo operation to a StableHLO equivalent.
     // This can almost be done in a generic fashion, except for
@@ -356,14 +385,18 @@ struct TypeAndAttrConversionPattern : OpConversionPattern<SourceOp> {
     }
     return success();
   }
+
+ private:
+  Version const& target;
 };
 
 template <typename... VhloOpTypes>
 void populateAttrTypeConversionPatterns(RewritePatternSet* patterns,
                                         TypeConverter* converter,
-                                        MLIRContext* context) {
+                                        MLIRContext* context,
+                                        Version const& target) {
   patterns->add<TypeAndAttrConversionPattern<VhloOpTypes>...>(*converter,
-                                                              context);
+                                                              context, target);
 }
 
 }  // namespace
@@ -372,7 +405,8 @@ void populateAttrTypeConversionPatterns(RewritePatternSet* patterns,
 namespace stablehlo {
 void populateVhloToVersionPatterns(RewritePatternSet* patterns,
                                    TypeConverter* converter,
-                                   MLIRContext* context) {
+                                   MLIRContext* context,
+                                   vhlo::Version const& target) {
   patterns->add<vhlo::CustomCallOpV1ToV2>(*converter, context);
   patterns->add<vhlo::CustomCallOpV2ToV1>(*converter, context);
   patterns->add<vhlo::CollectivePermuteOpV1ToV2>(*converter, context);
@@ -380,8 +414,10 @@ void populateVhloToVersionPatterns(RewritePatternSet* patterns,
   patterns->add<vhlo::AllGatherOpV1ToV2>(*converter, context);
   patterns->add<vhlo::AllGatherOpV2ToV1>(*converter, context);
 
-  vhlo::populateAttrTypeConversionPatterns<vhlo::CreateTokenOpV1>(
-      patterns, converter, context);
+  vhlo::populateAttrTypeConversionPatterns<
+#define GET_OP_LIST
+#include "stablehlo/dialect/VhloOps.cpp.inc"
+      >(patterns, converter, context, target);
 }
 
 }  // namespace stablehlo
