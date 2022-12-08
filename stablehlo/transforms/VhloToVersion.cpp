@@ -87,38 +87,39 @@ bool isDialect(AttrOrType at, llvm::StringRef dialectName) {
   return (at.getDialect().getNamespace() == dialectName);
 }
 
-bool isLegalAttribute(Operation* op, NamedAttribute const& attr,
-                      Version targetVersion) {
+LogicalResult isLegalAttribute(Operation* op, NamedAttribute const& attr,
+                               Version targetVersion) {
   // TODO: Remove once builtin types are forked.
   if (isDialect(attr.getValue(), "builtin")) {
-    return true;
+    return success();
   }
 
   auto attrInterface = dyn_cast<VersionedAttrInterface>(attr.getValue());
   if (attrInterface && isLegalVersionForTarget(attrInterface, targetVersion)) {
-    return true;
+    return success();
   }
 
-  op->emitError() << "failed to legalize attribute " << attr.getName()
-                  << " to version " << targetVersion;
-  return false;
+  LLVM_DEBUG(llvm::dbgs() << "failed to legalize attribute " << attr.getName()
+                          << " to version " << targetVersion);
+  return failure();
 }
 
-bool isLegalType(Operation* op, Type const& type,
-                 Version const& targetVersion) {
+LogicalResult isLegalType(Operation* op, Type const& type,
+                          Version const& targetVersion) {
   // TODO: Remove once builtin types are forked.
   if (isDialect(type, "builtin") || isDialect(type, "shape")) {
-    return true;
+    return success();
   }
 
   auto typeInterface = dyn_cast<VersionedTypeInterface>(type);
   if (typeInterface && isLegalVersionForTarget(typeInterface, targetVersion)) {
-    return true;
+    return success();
   }
 
-  op->emitError() << "failed to legalize type " << type << " to version "
-                  << targetVersion;
-  return false;
+  return failure();
+  // return op->emitError() << "failed to legalize type " << type << " to
+  // version "
+  //                 << targetVersion;
 }
 
 bool isLegalOpInTargetVersion(Operation* op, Version const& targetVersion) {
@@ -129,13 +130,13 @@ bool isLegalOpInTargetVersion(Operation* op, Version const& targetVersion) {
 
   // Validate attributes
   auto isLegalAttrFn = [&](NamedAttribute const& attr) {
-    return isLegalAttribute(op, attr, targetVersion);
+    return succeeded(isLegalAttribute(op, attr, targetVersion));
   };
   if (!llvm::all_of(op->getAttrs(), isLegalAttrFn)) return false;
 
   // Validate types
   auto isLegalTypeFn = [&](Type const& t) {
-    return isLegalType(op, t, targetVersion);
+    return succeeded(isLegalType(op, t, targetVersion));
   };
   if (!llvm::all_of(op->getOperandTypes(), isLegalTypeFn) ||
       !llvm::all_of(op->getResultTypes(), isLegalTypeFn)) {
@@ -189,6 +190,7 @@ struct VhloToVersionPass : public VhloToVersionPassBase<VhloToVersionPass> {
     RewritePatternSet patterns(&getContext());
     stablehlo::populateVhloToVersionPatterns(&patterns, &converter,
                                              &getContext());
+    registerFuncOpsForTypeConversion(target, patterns, converter);
 
     // Conversions within VHLO may fail if new features or ops are used.
     if (failed(applyPartialConversion(getOperation(), target,
@@ -239,6 +241,7 @@ struct VersionConversionPattern : OpConversionPattern<SourceOp> {
 // vhlo.custom_call --> vhlo.custom_call_v2
 struct CustomCallOpV1ToV2
     : public VersionConversionPattern<CustomCallOpV1, CustomCallOpV2> {
+  using VersionConversionPattern::VersionConversionPattern;
   LogicalResult prepareOpForConversion(CustomCallOpV1) const final {
     return success();
   }
@@ -311,11 +314,42 @@ struct TypeAndAttrConversionPattern : OpConversionPattern<SourceOp> {
   using OpConversionPattern<SourceOp>::OpConversionPattern;
 
   LogicalResult matchAndRewrite(
-      SourceOp op, typename SourceOp::Adaptor /*adaptor*/,
+      SourceOp op, typename SourceOp::Adaptor adaptor,
       ConversionPatternRewriter& rewriter) const override {
+    SmallVector<Type> vhloTypes;
+    LLVM_DEBUG(llvm::dbgs() << "Converting types:\n");
+    if (failed(this->getTypeConverter()->convertTypes(op->getResultTypes(),
+                                                      vhloTypes))) {
+      LLVM_DEBUG(llvm::dbgs() << "Failed type conversion\n");
+      return failure();
+    }
 
-    auto newOp = rewriter.replaceOpWithNewOp<SourceOp>(
-        op, op->getResultTypes(), op->getOperands(), op->getAttrs());
+    // These operands have already been converted to VHLO by
+    // the dialect conversion infrastructure.
+    ValueRange vhloOperands = adaptor.getOperands();
+
+    SmallVector<NamedAttribute> vhloAttrs;
+    /*
+    for (NamedAttribute attr : op->getAttrs()) {
+      // auto vhloAttr = convertAttrToVersion(attr.getValue());
+      // if (!vhloAttr) return failure();
+      // vhloAttrs.push_back({attr.getName(), vhloAttr});
+    }
+    */
+
+    // Convert the vhlo operation to a StableHLO equivalent.
+    // This can almost be done in a generic fashion, except for
+    // vhlo.case that uses a variadic number of regions which means an
+    // additional argument for the generic builder.
+    SourceOp newOp;
+    if constexpr (std::is_same<SourceOp, vhlo::CaseOpV1>::value) {
+      newOp = rewriter.replaceOpWithNewOp<vhlo::CaseOpV1>(
+          op, vhloTypes, vhloOperands, vhloAttrs, op.getBranches().size());
+    } else {
+      newOp = rewriter.replaceOpWithNewOp<SourceOp>(op, vhloTypes, vhloOperands,
+                                                    vhloAttrs);
+    }
+
     for (auto [oldRegion, newRegion] :
          llvm::zip(op->getRegions(), newOp->getRegions())) {
       rewriter.inlineRegionBefore(oldRegion, newRegion, newRegion.end());
@@ -346,7 +380,8 @@ void populateVhloToVersionPatterns(RewritePatternSet* patterns,
   patterns->add<vhlo::AllGatherOpV1ToV2>(*converter, context);
   patterns->add<vhlo::AllGatherOpV2ToV1>(*converter, context);
 
-  vhlo::populateAttrTypeConversionPatterns<vhlo::CreateTokenOpV1>(patterns, converter, context);
+  vhlo::populateAttrTypeConversionPatterns<vhlo::CreateTokenOpV1>(
+      patterns, converter, context);
 }
 
 }  // namespace stablehlo

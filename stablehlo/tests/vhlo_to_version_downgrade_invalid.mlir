@@ -23,7 +23,7 @@ func.func @custom_call_v2_with_output_operand_alises(%arg0 : tensor<f32>) -> ten
 
 func.func @op_with_output_operand_alises(%arg0 : tensor<f32>) -> () {
   // expected-error @+2 {{failed to legalize operation 'vhlo.add' that was explicitly marked illegal}}
-  // expected-error @+1 {{failed to legalize attribute "op_alias_attr" to version 0.3.0}}
+  // expected-disabled-error @+1 {{failed to legalize attribute "op_alias_attr" to version 0.3.0}}
   stablehlo.add %arg0, %arg0 {
     op_alias_attr = #stablehlo.output_operand_alias<output_tuple_indices = [],
                                                     operand_index = 0,

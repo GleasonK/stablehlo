@@ -21,3 +21,12 @@ func.func @custom_call_to_v2(%arg0: tensor<2xi1>) -> tensor<2xi1> {
   %0 = "vhlo.custom_call"(%arg0) {backend_config = "", call_target_name = "foo"} : (tensor<2xi1>) -> tensor<2xi1>
   return %0 : tensor<2xi1>
 }
+
+// CHECK-LABEL: @token_type_v1_to_v2
+// CHECK-SAME: () -> !vhlo.token_v2
+func.func @token_type_v1_to_v2() -> !vhlo.token {
+  // CHECK-NEXT: %0 = "vhlo.create_token"() : () -> !vhlo.token_v2
+  %0 = "vhlo.create_token"() : () -> !vhlo.token
+  // CHECK-NEXT: return %0 : !vhlo.token_v2
+  return %0 : !vhlo.token 
+}

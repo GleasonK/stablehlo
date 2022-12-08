@@ -23,6 +23,7 @@ limitations under the License.
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Regex.h"
+#include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/Diagnostics.h"
 #include "mlir/Support/LogicalResult.h"
 
@@ -59,6 +60,7 @@ class Version {
 };
 
 mlir::Diagnostic& operator<<(mlir::Diagnostic& diag, const Version& version);
+llvm::raw_ostream& operator<<(llvm::raw_ostream& os, const Version& version);
 
 template <typename VersionedInterface>
 bool isLegalVersionForTarget(VersionedInterface& interface,
