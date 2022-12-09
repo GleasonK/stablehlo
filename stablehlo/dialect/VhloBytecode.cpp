@@ -163,6 +163,15 @@ enum AttributeCode {
   ///     operandTupleIndices: svarint[]
   ///   }
   kOutputOperandAlias = 14,
+
+  ///   ScatterDimensionNumbersAttr {
+  ///     updateWindowDims: svarint[]
+  ///     insertedWindowDims: svarint[]
+  ///     scatterDimsToOperandDims: svarint[]
+  ///     indexVectorDim: svarint
+  ///   }
+  kScatterDimensionNumbersV2Attr = 15,
+
 };
 
 /// This enum contains marker codes used to indicate which type is
@@ -178,6 +187,10 @@ enum TypeCode {
   ///   TokenType {
   ///   }
   kTokenType = 0,
+
+  ///   TokenV2Type {
+  ///   }
+  kTokenV2Type = 1,
 };
 
 }  // namespace vhlo_encoding
@@ -229,6 +242,8 @@ class VhloBytecodeInterface : public BytecodeDialectInterface {
       DialectBytecodeReader &reader) const;
   ScatterDimensionNumbersAttr readScatterDimensionNumbersAttr(
       DialectBytecodeReader &reader) const;
+  ScatterDimensionNumbersV2Attr readScatterDimensionNumbersV2Attr(
+      DialectBytecodeReader &reader) const;
   TransposeAttr readTransposeAttr(DialectBytecodeReader &reader) const;
   TypeExtensionsAttr readTypeExtensionsAttr(
       DialectBytecodeReader &reader) const;
@@ -251,6 +266,8 @@ class VhloBytecodeInterface : public BytecodeDialectInterface {
   void write(RngDistributionAttr attr, DialectBytecodeWriter &writer) const;
   void write(ScatterDimensionNumbersAttr attr,
              DialectBytecodeWriter &writer) const;
+  void write(ScatterDimensionNumbersV2Attr attr,
+             DialectBytecodeWriter &writer) const;
   void write(TransposeAttr attr, DialectBytecodeWriter &writer) const;
   void write(TypeExtensionsAttr attr, DialectBytecodeWriter &writer) const;
 
@@ -266,10 +283,12 @@ class VhloBytecodeInterface : public BytecodeDialectInterface {
   // TO ADD TYPE: Include a read method for each type in VHLO
   // Ex: SomeType readSomeType(DialectBytecodeReader &reader) const;
   TokenType readTokenType(DialectBytecodeReader &reader) const;
+  TokenV2Type readTokenV2Type(DialectBytecodeReader &reader) const;
 
   // TO ADD TYPE: Include a write method for each type in VHLO
   // Ex: void write(SomeType attr, DialectBytecodeWriter &writer) const;
   void write(TokenType type, DialectBytecodeWriter &writer) const;
+  void write(TokenV2Type type, DialectBytecodeWriter &writer) const;
 };
 
 //===----------------------------------------------------------------------===//
@@ -310,6 +329,8 @@ Attribute VhloBytecodeInterface::readAttribute(
       return readRngDistributionAttr(reader);
     case vhlo_encoding::kScatterDimensionNumbersAttr:
       return readScatterDimensionNumbersAttr(reader);
+    case vhlo_encoding::kScatterDimensionNumbersV2Attr:
+      return readScatterDimensionNumbersV2Attr(reader);
     case vhlo_encoding::kTransposeAttr:
       return readTransposeAttr(reader);
     case vhlo_encoding::kTypeExtensionsAttr:
@@ -501,6 +522,26 @@ VhloBytecodeInterface::readScatterDimensionNumbersAttr(
       scatterDimsToOperandDims, indexVectorDim);
 }
 
+ScatterDimensionNumbersV2Attr
+VhloBytecodeInterface::readScatterDimensionNumbersV2Attr(
+    DialectBytecodeReader &reader) const {
+  LOG_READ_CALL;
+  llvm::SmallVector<int64_t> updateWindowDims, insertedWindowDims,
+      scatterDimsToOperandDims;
+  int64_t indexVectorDim;
+
+  if (failed(reader.readSignedVarInts(updateWindowDims)) ||
+      failed(reader.readSignedVarInts(insertedWindowDims)) ||
+      failed(reader.readSignedVarInts(scatterDimsToOperandDims)) ||
+      failed(reader.readSignedVarInt(indexVectorDim))) {
+    return ScatterDimensionNumbersV2Attr();
+  }
+
+  return ScatterDimensionNumbersV2Attr::get(
+      getContext(), updateWindowDims, insertedWindowDims,
+      scatterDimsToOperandDims, indexVectorDim);
+}
+
 TransposeAttr VhloBytecodeInterface::readTransposeAttr(
     DialectBytecodeReader &reader) const {
   LOG_READ_CALL;
@@ -532,12 +573,13 @@ LogicalResult VhloBytecodeInterface::writeAttribute(
             ConvDimensionNumbersAttr, ChannelHandleAttr,
             DotDimensionNumbersAttr, FftTypeAttr, GatherDimensionNumbersAttr,
             OutputOperandAliasAttr, PrecisionAttr, RngAlgorithmAttr,
-            RngDistributionAttr, ScatterDimensionNumbersAttr, TransposeAttr,
-            TypeExtensionsAttr>([&](auto attr) {
-        LOG_WRITE_CALL;
-        write(attr, writer);
-        return success();
-      })
+            RngDistributionAttr, ScatterDimensionNumbersAttr,
+            ScatterDimensionNumbersV2Attr, TransposeAttr, TypeExtensionsAttr>(
+          [&](auto attr) {
+            LOG_WRITE_CALL;
+            write(attr, writer);
+            return success();
+          })
       .Default([&](Attribute) {
         LOG_NOT_IMPLEMENTED;
         return failure();
@@ -645,6 +687,15 @@ void VhloBytecodeInterface::write(ScatterDimensionNumbersAttr attr,
   writer.writeSignedVarInt(attr.getIndexVectorDim());
 }
 
+void VhloBytecodeInterface::write(ScatterDimensionNumbersV2Attr attr,
+                                  DialectBytecodeWriter &writer) const {
+  writer.writeVarInt(vhlo_encoding::kScatterDimensionNumbersV2Attr);
+  writer.writeSignedVarInts(attr.getUpdateWindowDims());
+  writer.writeSignedVarInts(attr.getInsertedWindowDims());
+  writer.writeSignedVarInts(attr.getScatterDimsToOperandDims());
+  writer.writeSignedVarInt(attr.getIndexVectorDim());
+}
+
 void VhloBytecodeInterface::write(TransposeAttr attr,
                                   DialectBytecodeWriter &writer) const {
   writer.writeVarInt(vhlo_encoding::kTransposeAttr);
@@ -668,6 +719,8 @@ Type VhloBytecodeInterface::readType(DialectBytecodeReader &reader) const {
   switch (code) {
     case vhlo_encoding::kTokenType:
       return readTokenType(reader);
+    case vhlo_encoding::kTokenV2Type:
+      return readTokenV2Type(reader);
 
     default:
       reader.emitError() << "unknown builtin type code: " << code;
@@ -679,6 +732,10 @@ TokenType VhloBytecodeInterface::readTokenType(DialectBytecodeReader &) const {
   LOG_READ_CALL;
   return TokenType::get(getContext());
 }
+TokenV2Type VhloBytecodeInterface::readTokenV2Type(DialectBytecodeReader &) const {
+  LOG_READ_CALL;
+  return TokenV2Type::get(getContext());
+}
 
 //===----------------------------------------------------------------------===//
 // Types: Writer
@@ -687,7 +744,7 @@ TokenType VhloBytecodeInterface::readTokenType(DialectBytecodeReader &) const {
 LogicalResult VhloBytecodeInterface::writeType(
     Type type, DialectBytecodeWriter &writer) const {
   return TypeSwitch<Type, LogicalResult>(type)
-      .Case<TokenType>([&](auto type) {
+      .Case<TokenType, TokenV2Type>([&](auto type) {
         LOG_WRITE_CALL;
         write(type, writer);
         return success();
@@ -701,6 +758,11 @@ LogicalResult VhloBytecodeInterface::writeType(
 void VhloBytecodeInterface::write(TokenType type,
                                   DialectBytecodeWriter &writer) const {
   writer.writeVarInt(vhlo_encoding::kTokenType);
+}
+
+void VhloBytecodeInterface::write(TokenV2Type type,
+                                  DialectBytecodeWriter &writer) const {
+  writer.writeVarInt(vhlo_encoding::kTokenV2Type);
 }
 
 }  // namespace
