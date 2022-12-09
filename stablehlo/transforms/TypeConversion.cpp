@@ -14,8 +14,12 @@ limitations under the License.
 
 #include "stablehlo/transforms/TypeConversion.h"
 
+#include "llvm/Support/Debug.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Func/Transforms/FuncConversions.h"
+#include "stablehlo/dialect/VhloOps.h"
+
+#define DEBUG_TYPE "compat-passes"
 
 namespace mlir {
 namespace vhlo {
@@ -36,6 +40,62 @@ void registerFuncOpsForTypeConversion(ConversionTarget& target,
                                                                  converter);
   populateCallOpTypeConversionPattern(patterns, converter);
   populateReturnOpTypeConversionPattern(patterns, converter);
+}
+
+namespace {
+/// Adds either an upgrade conversion or a downgrade conversion depending on the
+/// specified target version.
+///
+/// If target is less than or equal to the downgraded type, adds the downgrade
+/// conversion. Else adds the upgrade conversion.
+template <typename DowngradedType, typename UpgradedType>
+void addUpgradeOrDowngrade(
+    TypeConverter& converter, Version const& target,
+    std::function<UpgradedType(DowngradedType)>&& upgradeFn,
+    std::function<DowngradedType(UpgradedType)>&& downgradeFn) {
+  assert(DowngradedType::maxVersion() < UpgradedType::minVersion());
+  if (target <= DowngradedType::maxVersion()) {
+    LLVM_DEBUG(llvm::dbgs()
+               << "Adding type conversion " << UpgradedType::getMnemonic()
+               << " -> " << DowngradedType::getMnemonic() << '\n');
+    converter.addConversion(downgradeFn);
+  } else {
+    assert(UpgradedType::maxVersion() <= target);
+    LLVM_DEBUG(llvm::dbgs()
+               << "Adding type conversion " << DowngradedType::getMnemonic()
+               << " -> " << UpgradedType::getMnemonic() << '\n');
+    converter.addConversion(upgradeFn);
+  }
+}
+}  // namespace
+
+VhloToVersionConverter::VhloToVersionConverter(Version const& target)
+    : VersionedTypeConverterBase() {
+  // Base conversion - Allow types that are legal in the target version.
+  addConversion([&](Type type) -> Type {
+    if (auto interface = type.dyn_cast<VersionedTypeInterface>()) {
+      LLVM_DEBUG(llvm::dbgs() << "Checking type legality " << type << ": "
+                              << interface.getMinVersion() << " <= " << target
+                              << " <= " << interface.getMaxVersion() << '\n');
+      return isLegalVersionForTarget(interface, target) ? type : Type{};
+    }
+    // TODO: All types should be versioned
+    return type;
+  });
+
+  // TokenType <--> TokenV2Type
+  addUpgradeOrDowngrade<TokenType, TokenV2Type>(
+      *this, target,
+      [](TokenType type) { return TokenV2Type::get(type.getContext()); },
+      [](TokenV2Type type) { return TokenType::get(type.getContext()); });
+}
+
+bool VhloToVersionConverter::isSourceDialect(Dialect& dialect) {
+  return dialect.getNamespace() == vhlo::VhloDialect::getDialectNamespace();
+}
+
+Attribute VhloToVersionConverter::convertEncoding(Attribute attr) {
+  return attr;
 }
 
 }  // namespace vhlo

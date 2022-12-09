@@ -117,10 +117,9 @@ LogicalResult isLegalType(Operation* op, Type const& type,
     return success();
   }
 
+  LLVM_DEBUG(llvm::dbgs() << "failed to legalize type " << type
+                          << " to version " << targetVersion << '\n');
   return failure();
-  // return op->emitError() << "failed to legalize type " << type << " to
-  // version "
-  //                 << targetVersion;
 }
 
 bool isLegalOpInTargetVersion(Operation* op, Version const& targetVersion) {
@@ -158,7 +157,8 @@ struct VhloToVersionPass : public VhloToVersionPassBase<VhloToVersionPass> {
     ConversionTarget target(getContext());
 
     // Validate version number
-    auto failOrVersion = validateTargetVersion(targetVersion, getOperation());
+    auto failOrVersion =
+        validateTargetVersion(targetVersionClopt, getOperation());
     if (failed(failOrVersion)) {
       return signalPassFailure();
     }
@@ -240,7 +240,7 @@ struct VersionConversionPattern : OpConversionPattern<SourceOp> {
 /////////////////////////////////////////
 
 Attribute convertAttrToVersion(Attribute&& attr, Version const& target) {
-  LLVM_DEBUG(llvm::dbgs() << "Converting " << attr << " to " << target);
+  LLVM_DEBUG(llvm::dbgs() << "Converting " << attr << " to " << target << '\n');
   Attribute newAttr = std::move(attr);
   if (target <= Version::fromString("0.3.0")) {
     // 0.4.0 --> 0.3.0

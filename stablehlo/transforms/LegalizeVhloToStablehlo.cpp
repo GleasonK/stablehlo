@@ -40,7 +40,7 @@ namespace {
   return stablehlo::Name##Attr::get(attr.getContext(), stablehloValue.value())
 
 Attribute convertAttrToStablehlo(Attribute vhloAttr) {
-  LLVM_DEBUG(llvm::dbgs() << "Converting " << vhloAttr);
+  LLVM_DEBUG(llvm::dbgs() << "Converting " << vhloAttr << '\n');
   if (auto attr = vhloAttr.dyn_cast<vhlo::ChannelHandleAttr>()) {
     return stablehlo::ChannelHandleAttr::get(attr.getContext(),
                                              attr.getHandle(), attr.getType());

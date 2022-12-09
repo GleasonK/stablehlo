@@ -112,44 +112,11 @@ class VhloToStablehloTypeConverter : public VersionedTypeConverterBase {
 
 class VhloToVersionConverter : public VersionedTypeConverterBase {
  public:
-  VhloToVersionConverter(Version target) : VersionedTypeConverterBase() {
-    addConversion([&](Type t) -> Type {
-      if (auto interface = t.dyn_cast<VersionedTypeInterface>()) {
-        return isLegalVersionForTarget(interface, target) ? t : Type{};
-      }
-      // TODO: All types should be versioned
-      return t;
-    });
+  VhloToVersionConverter(Version const& target);
 
-    addConditionalConversion(
-        target, *Version::fromString("0.3.0"),
-        [](TokenV2Type t) -> Type { return TokenType::get(t.getContext()); },
-        [](TokenType t) -> Type { return TokenV2Type::get(t.getContext()); });
-  }
+  bool isSourceDialect(Dialect& dialect) final;
 
-  bool isSourceDialect(Dialect& dialect) final {
-    return dialect.getNamespace() == vhlo::VhloDialect::getDialectNamespace();
-  }
-
-  Attribute convertEncoding(Attribute attr) final {
-    if (auto vhloAttr = attr.dyn_cast_or_null<vhlo::TypeExtensionsAttr>()) {
-      return stablehlo::TypeExtensionsAttr::get(vhloAttr.getContext(),
-                                                vhloAttr.getBounds());
-    }
-    // All encodings should be supported.
-    return attr;
-  }
-
- private:
-  template <typename DowngradeFn, typename UpgradeFn>
-  void addConditionalConversion(Version const& target, Version const& version,
-                                DowngradeFn&& downgrade, UpgradeFn&& upgrade) {
-    if (target <= version) {
-      addConversion(downgrade);
-    } else {
-      addConversion(upgrade);
-    }
-  }
+  Attribute convertEncoding(Attribute attr) final;
 };
 
 // Complements conversion patterns with boilerplate that makes sure `func.func`,

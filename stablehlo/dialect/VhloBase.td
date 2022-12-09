@@ -68,9 +68,15 @@ class VHLO_TypeDef<string name,
   : TypeDef<VHLO_Dialect, name, [VHLO_VersionedTypeInterface]> {
   let extraClassDeclaration = [{
     mlir::vhlo::Version getMinVersion() {
-      return *mlir::vhlo::Version::fromString("}] #  minVersion # [{");
+      return minVersion();
     }
     mlir::vhlo::Version getMaxVersion() {
+      return maxVersion();
+    }
+    static mlir::vhlo::Version minVersion() {
+      return *mlir::vhlo::Version::fromString("}] #  minVersion # [{");
+    }
+    static mlir::vhlo::Version maxVersion() {
       if (!strcmp("}] # maxVersion # [{", "current")) return VhloDialect::getCurrentVersion();
       return *mlir::vhlo::Version::fromString("}] #  maxVersion # [{");
     }
