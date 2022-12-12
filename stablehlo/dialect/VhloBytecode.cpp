@@ -434,6 +434,9 @@ class VhloBytecodeInterface : public BytecodeDialectInterface {
   // TO ADD TYPE: Include a read method for each type in VHLO
   // Ex: SomeType readSomeType(DialectBytecodeReader &reader) const;
   TokenType readTokenType(DialectBytecodeReader &reader) const;
+  WrappedType readRankedTensorType(DialectBytecodeReader &reader,
+                                   bool hasEncoding) const;
+  WrappedType readUnrankedTensorType(DialectBytecodeReader &reader) const;
 
   // TO ADD TYPE: Include a write method for each type in VHLO
   // Ex: void write(SomeType attr, DialectBytecodeWriter &writer) const;
