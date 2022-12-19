@@ -492,8 +492,14 @@ Attribute VhloBytecodeInterface::readAttribute(
       return readDotDimensionNumbersAttr(reader);
     case vhlo_encoding::kFftTypeAttr:
       return readFftTypeAttr(reader);
+    case vhlo_encoding::kFlatSymbolRefAttr:
+      return readFlatSymbolRefAttr(reader);
+    case vhlo_encoding::kFloatAttr:
+      return readFloatAttr(reader);
     case vhlo_encoding::kGatherDimensionNumbers:
       return readGatherDimensionNumbersAttr(reader);
+    case vhlo_encoding::kIntegerAttr:
+      return readIntegerAttr(reader);
     case vhlo_encoding::kOutputOperandAlias:
       return readOutputOperandAliasAttr(reader);
     case vhlo_encoding::kPrecisionAttr:
@@ -504,6 +510,8 @@ Attribute VhloBytecodeInterface::readAttribute(
       return readRngDistributionAttr(reader);
     case vhlo_encoding::kScatterDimensionNumbersAttr:
       return readScatterDimensionNumbersAttr(reader);
+    case vhlo_encoding::kStringAttr:
+      return readStringAttr(reader);
     case vhlo_encoding::kTransposeAttr:
       return readTransposeAttr(reader);
     case vhlo_encoding::kTypeExtensionsAttr:

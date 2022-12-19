@@ -380,6 +380,7 @@ func.func @op_all_reduce(%arg0: tensor<f32>) -> tensor<f32> {
 // CHECK-LABEL: "op_all_reduce"
 
 func.func @op_all_to_all(%arg0: tensor<4x16xf32>) -> tensor<16x4xf32> {
+<<<<<<< HEAD
   //               CHECK: "vhlo.all_to_all_v2"(%arg0) {
   //          CHECK-SAME:   channel_handle = #vhlo.channel_handle<handle = 1, type = 0>
   //          CHECK-SAME:   concat_dimension = #vhlo.integer<0 : i64>,
