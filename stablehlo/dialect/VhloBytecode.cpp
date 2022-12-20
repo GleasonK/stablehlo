@@ -422,6 +422,11 @@ class VhloBytecodeInterface : public BytecodeDialectInterface {
   void write(StringV1Attr attr, DialectBytecodeWriter &writer) const;
   // void write(UnitV1Attr attr, DialectBytecodeWriter &writer) const;
 
+  void write(DenseIntOrFPElementsV1Attr attr,
+             DialectBytecodeWriter &writer) const;
+  void write(ArrayAttr attr, DialectBytecodeWriter &writer) const;
+  void write(UnitAttr attr, DialectBytecodeWriter &writer) const;
+
   //===--------------------------------------------------------------------===//
   // Types
 
@@ -478,6 +483,8 @@ Attribute VhloBytecodeInterface::readAttribute(
   switch (code) {
     case vhlo_encoding::kArgResultAliasAttr:
       return readArgResultAliasAttr(reader);
+    case vhlo_encoding::kArrayAttr:
+      return readArrayAttr(reader);
     case vhlo_encoding::kChannelHandleAttr:
       return readChannelHandleAttr(reader);
     case vhlo_encoding::kComparisonDirectionAttr:
@@ -1119,6 +1126,14 @@ void VhloBytecodeInterface::write(StringV1Attr attr,
                                   DialectBytecodeWriter &writer) const {
   writer.writeVarInt(vhlo_encoding::kStringAttr);
   writer.writeOwnedString(attr.getValue());
+}
+
+void VhloBytecodeInterface::write(DenseIntOrFPElementsV1Attr attr,
+                                  DialectBytecodeWriter &writer) const {
+  assertFromVhlo(attr.getType());
+  writer.writeVarInt(vhlo_encoding::kDenseIntOrFPElementsAttr);
+  writer.writeType(attr.getType());
+  writer.writeOwnedBlob(attr.getRawData());
 }
 
 //===----------------------------------------------------------------------===//

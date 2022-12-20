@@ -257,6 +257,15 @@ struct VersionConversionPattern : OpConversionPattern<SourceOp> {
 /// Upgrade and Downgrade Definitions ///
 /////////////////////////////////////////
 
+template <typename WrappedDataType>
+WrappedDataType unwrap(Attribute attr) {
+  auto wrapped = attr.dyn_cast<WrappedAttr>();
+  if (!wrapped) return WrappedDataType();
+  auto unwrapped = wrapped.getData().dyn_cast<WrappedDataType>();
+  if (!unwrapped) return WrappedDataType();
+  return unwrapped;
+}
+
 // vhlo.custom_call --> vhlo.custom_call_v2
 struct CustomCallOpV1ToV2
     : public VersionConversionPattern<CustomCallOpV1, CustomCallOpV2> {
