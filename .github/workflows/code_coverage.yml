@@ -47,20 +47,21 @@ jobs:
       id: ccov-status
       shell: bash
       run: |
-        git fetch --no-tags --prune --depth=1000 origin +refs/heads/*:refs/remotes/origin/*
-        git checkout main && git pull origin main
-        git checkout ccov && git pull origin ccov
-        CCOV_ROOT=$(git merge-base ccov main)
-        MAIN_HASH=$(git rev-parse main)
-        echo "Merge base: $CCOV_ROOT"
-        echo "Main base:  $MAIN_HASH"
-        if [ $CCOV_ROOT = $MAIN_HASH ]
-        then
-          echo "Up to date. Skipping report generation."
-          echo "::set-output name=stale::0"
-        else
-          echo "::set-output name=stale::1"
-        fi
+        #  git fetch --no-tags --prune --depth=1000 origin +refs/heads/*:refs/remotes/origin/*
+        # git checkout main && git pull origin main
+        # git checkout ccov && git pull origin ccov
+        # CCOV_ROOT=$(git merge-base ccov main)
+        # MAIN_HASH=$(git rev-parse main)
+        # echo "Merge base: $CCOV_ROOT"
+        # echo "Main base:  $MAIN_HASH"
+        # if [ $CCOV_ROOT = $MAIN_HASH ]
+        # then
+        #   echo "Up to date. Skipping report generation."
+        #   echo "::set-output name=stale::0"
+        # else
+        #   git rebase -Xours main
+           echo "::set-output name=stale::1"
+        # fi
 
     # Read LLVM version from `build_tools/llvm_version.txt`
     - name: Get LLVM Version
@@ -100,5 +101,4 @@ jobs:
         git config --local user.name "github-actions[bot]"
         git add reports/*
         git commit -m "Generated new report."
-        git rebase -Xours main
         git push origin ccov -f
