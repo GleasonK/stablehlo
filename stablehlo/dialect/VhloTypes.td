@@ -67,9 +67,19 @@ class VHLO_TypeDef<string cppName,
 def VHLO_Token : VHLO_TypeDef<"Token", "token">;
 
 // Tuple Type
+// FIXME: Empty tuple will likely fail
 def VHLO_TupleV1 : VHLO_TypeDef<"TupleV1", "tuple"> {
   let parameters = (ins ArrayRefParameter<"::mlir::Type">:$types);
-  let assemblyFormat = "`<` $types `>`";
+  let assemblyFormat = "`<` custom<TypeArray>($types) `>`";
+}
+
+// Modular Types
+def VHLO_FunctionType : VHLO_TypeDef<"FunctionV1", "func"> {
+  let parameters = (ins
+    ArrayRefParameter<"::mlir::Type">:$inputs,
+    ArrayRefParameter<"mlir::Type">:$results
+  );
+  let assemblyFormat = "`<` `(` custom<TypeArray>($inputs) `)` `->` custom<TypeArray>($results) `>`";
 }
 
 // Tensor Types

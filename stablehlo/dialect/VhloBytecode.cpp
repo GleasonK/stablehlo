@@ -218,6 +218,11 @@ enum AttributeCode {
   ///     data: blob
   ///   }
   kDenseIntOrFPElementsAttr = 26,
+
+  ///   TypeAttr {
+  ///     value: Type
+  ///   }
+  kTypeAttr = 27,
 };
 
 /// This enum contains marker codes used to indicate which type is
@@ -307,20 +312,26 @@ enum TypeCode {
   /// Variant of RankedTensorType with an encoding.
   kRankedTensorTypeWithEncoding = 14,
 
+  ///   FunctionType {
+  ///     inputs: Type[]
+  ///     results: Type[]
+  ///   }
+  kFunctionType = 15,
+
   ///   TupleType {
   ///     elementTypes: Type[]
   ///   }
-  kTupleType = 15,
+  kTupleType = 16,
 
   ///   UnrankedTensorType {
   ///     elementType: Type
   ///   }
   ///
-  kUnrankedTensorType = 16,
+  kUnrankedTensorType = 17,
 
   ///   WitnessType {
   ///   }
-  kWitnessType = 17,
+  kWitnessType = 18,
 };
 
 }  // namespace vhlo_encoding
@@ -449,12 +460,14 @@ class VhloBytecodeInterface : public BytecodeDialectInterface {
 
   //===--------------------------------------------------------------------===//
   // Forked Types
+  FunctionV1Type readFunctionType(DialectBytecodeReader &reader) const;
   RankedTensorV1Type readRankedTensorType(DialectBytecodeReader &reader,
                                           bool hasEncoding) const;
   TupleV1Type readTupleType(DialectBytecodeReader &reader) const;
   UnrankedTensorV1Type readUnrankedTensorType(
       DialectBytecodeReader &reader) const;
 
+  void write(FunctionV1Type type, DialectBytecodeWriter &writer) const;
   void write(RankedTensorV1Type type, DialectBytecodeWriter &writer) const;
   void write(TupleV1Type type, DialectBytecodeWriter &writer) const;
   void write(UnrankedTensorV1Type type, DialectBytecodeWriter &writer) const;
@@ -1134,6 +1147,23 @@ void VhloBytecodeInterface::write(DenseIntOrFPElementsV1Attr attr,
   writer.writeVarInt(vhlo_encoding::kDenseIntOrFPElementsAttr);
   writer.writeType(attr.getType());
   writer.writeOwnedBlob(attr.getRawData());
+}
+
+void VhloBytecodeInterface::write(TypeV1Attr attr,
+                                  DialectBytecodeWriter &writer) const {
+  assertFromVhlo(attr.getValue());
+  writer.writeVarInt(vhlo_encoding::kTypeAttr);
+  writer.writeType(attr.getValue());
+}
+
+TypeV1Attr VhloBytecodeInterface::readTypeAttr(
+    DialectBytecodeReader &reader) const {
+  LOG_READ_CALL;
+  Type type;
+  if (failed(reader.readType(type))) return TypeV1Attr();
+
+  assertFromVhlo(type);
+  return TypeV1Attr::get(getContext(), type);
 }
 
 //===----------------------------------------------------------------------===//
