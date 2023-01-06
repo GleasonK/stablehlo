@@ -25,6 +25,7 @@ limitations under the License.
 #include "llvm/Support/ErrorHandling.h"
 #include "mlir/Bytecode/BytecodeImplementation.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
+#include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Diagnostics.h"
@@ -208,21 +209,27 @@ enum AttributeCode {
   kUnitAttr = 24,
 
   ///   ArrayAttr {
+  ///   DictionaryAttr {
+  ///     attrs: <StringAttr, Attribute>[]
+  ///   }
+  kDictionaryAttr = 25,
+
+  ///   ArrayAttr {
   ///     elements: Attribute[]
   ///   }
   ///
-  kArrayAttr = 25,
+  kArrayAttr = 26,
 
   ///   DenseIntOrFPElementsAttr {
   ///     type: ShapedType,
   ///     data: blob
   ///   }
-  kDenseIntOrFPElementsAttr = 26,
+  kDenseIntOrFPElementsAttr = 27,
 
   ///   TypeAttr {
   ///     value: Type
   ///   }
-  kTypeAttr = 27,
+  kTypeAttr = 28,
 };
 
 /// This enum contains marker codes used to indicate which type is
@@ -1147,6 +1154,17 @@ void VhloBytecodeInterface::write(DenseIntOrFPElementsV1Attr attr,
   writer.writeVarInt(vhlo_encoding::kDenseIntOrFPElementsAttr);
   writer.writeType(attr.getType());
   writer.writeOwnedBlob(attr.getRawData());
+}
+
+void VhloBytecodeInterface::write(DictionaryV1Attr attr,
+                                  DialectBytecodeWriter &writer) const {
+  writer.writeVarInt(vhlo_encoding::kDictionaryAttr);
+  writer.writeList(attr.getValue(), [&](auto attrPair) {
+    assertFromVhlo(attrPair.first);
+    assertFromVhlo(attrPair.second);
+    writer.writeAttribute(attrPair.first);
+    writer.writeAttribute(attrPair.second);
+  });
 }
 
 void VhloBytecodeInterface::write(TypeV1Attr attr,

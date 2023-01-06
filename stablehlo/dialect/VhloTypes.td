@@ -67,7 +67,6 @@ class VHLO_TypeDef<string cppName,
 def VHLO_Token : VHLO_TypeDef<"Token", "token">;
 
 // Tuple Type
-// FIXME: Empty tuple will likely fail
 def VHLO_TupleV1 : VHLO_TypeDef<"TupleV1", "tuple"> {
   let parameters = (ins ArrayRefParameter<"::mlir::Type">:$types);
   let assemblyFormat = "`<` custom<TypeArray>($types) `>`";
