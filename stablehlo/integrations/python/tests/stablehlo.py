@@ -200,3 +200,38 @@ def test_type_extensions():
   attr = stablehlo.TypeExtensions.get(bounds=[128, dyn_size])
   assert attr is not None
   assert attr.bounds == [128, dyn_size]
+
+
+@run
+def test_walk_ir():
+  def walk_operations(op, cb):
+    cb(op)
+    for region in op.operation.regions:
+      for block in region:
+        for op in block:
+          walk_operations(op, cb)
+
+  op_counts = {}
+  def collect_ops(op):
+    name = op.operation.name
+    op_counts[name] = op_counts.get(name, 0) + 1    
+
+  with ir.Context() as context:
+    ASM = """
+      func.func @test(%arg0: tensor<f32>, %arg1: tensor<i1>) -> tensor<f32> {
+        %0 = stablehlo.add %arg0, %arg0 : (tensor<f32>, tensor<f32>) -> tensor<f32>
+        %1 = "stablehlo.if"(%arg1) ({
+          "stablehlo.return"(%0) : (tensor<f32>) -> ()
+        }, {
+          "stablehlo.return"(%0) : (tensor<f32>) -> ()
+        }) : (tensor<i1>) -> tensor<f32>
+        func.return %1 : tensor<f32>
+      }
+      """
+    stablehlo.register_dialect(context)
+    m = ir.Module.parse(ASM)
+    walk_operations(m, collect_ops)
+    assert op_counts["builtin.module"] == 1
+    assert op_counts["func.func"] == 1
+    assert op_counts["stablehlo.if"] == 1
+    assert op_counts["stablehlo.return"] == 2
