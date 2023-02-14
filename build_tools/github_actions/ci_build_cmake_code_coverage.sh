@@ -90,8 +90,9 @@ if [[ $GENERATE_HTML == true ]]; then
       --show-details \
       --sort \
       --prefix $(pwd) | tee /dev/fd/5)
-  echo "HTML report at:"
-  echo "  $REPORT_DIR"
+  CCOV_SUMMARY=$(lcov -l "$LCOV_DATA" | grep -o "Total:.*|")
+  echo "HTML_REPORT_DIR=$REPORT_DIR"
+  echo "HTML_REPORT_TAG=[$REPORT_DIR](https://htmlpreview.github.io/?https://github.com/GleasonK/stablehlo/blob/ccov/$REPORT_DIR/index.html) [Line|Function] $CCOV_SUMMARY"
 fi
 
 echo "LCOV data at:"
