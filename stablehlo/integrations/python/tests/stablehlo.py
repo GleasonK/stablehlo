@@ -21,6 +21,7 @@ import re
 import io
 from mlir import ir
 from mlir.dialects import stablehlo
+import datetime
 
 
 def run(f):
@@ -214,6 +215,21 @@ def test_api_version():
 def test_current_version():
   curr_version = stablehlo.get_current_version()
   assert re.match('^\d+\.\d+\.\d+$', curr_version)
+
+@run
+def test_lookup_previous_version():
+  assert stablehlo.lookup_previous_version(2023, 3, 2) == "0.9.0"
+  assert stablehlo.lookup_previous_version(2023, 4, 19) == "0.9.0"
+  assert stablehlo.lookup_previous_version(2023, 4, 20) == "0.10.0"
+  assert stablehlo.lookup_previous_version(2023, 4, 26) == "0.10.0"
+  assert stablehlo.lookup_previous_version(2023, 4, 27) == "0.10.1"
+  assert stablehlo.lookup_previous_version(2023, 5, 2) == "0.11.0"
+  assert stablehlo.lookup_previous_version(2023, 5, 3) == "0.11.1"
+  assert stablehlo.lookup_previous_version(2023, 5, 8) == "0.11.2"
+  assert stablehlo.lookup_previous_version(9999, 99, 99) == "0.11.2"
+  assert stablehlo.get_current_version() == "0.11.3"
+  date = datetime.datetime.now() - datetime.timedelta(weeks=2)
+  assert isinstance(stablehlo.lookup_previous_version(date.year, date.month, date.day), str)
 
 ASM = """
 func.func @test(%arg0: tensor<2xf32>) -> tensor<2xf32> {

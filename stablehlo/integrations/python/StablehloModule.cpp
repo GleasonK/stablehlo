@@ -11,6 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include <cstdint>
+
 #include "mlir-c/IR.h"
 #include "mlir/Bindings/Python/PybindAdaptors.h"
 #include "mlir/CAPI/IR.h"
@@ -490,6 +492,18 @@ PYBIND11_MODULE(_stablehlo, m) {
 
   m.def("get_current_version",
         []() { return mlir::stablehlo::getCurrentVersion(); });
+
+  m.def(
+      "lookup_previous_version",
+      [](uint32_t year, uint32_t month, uint32_t day) -> std::string {
+        auto version = mlir::vhlo::lookupPreviousVersion({year, month, day});
+        if (failed(version)) {
+          PyErr_SetString(PyExc_ValueError, "unsupported version looked up");
+          return "";
+        }
+        return version.value().toString();
+      },
+      py::arg("year"), py::arg("month"), py::arg("day"));
 
   m.def(
       "serialize_portable_artifact",

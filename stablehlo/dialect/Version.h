@@ -31,17 +31,56 @@ limitations under the License.
 namespace mlir {
 namespace vhlo {
 
+class Date {
+ public:
+  Date(uint32_t year, uint32_t month, uint32_t day)
+      : year(year), month(month), day(day) {}
+
+  bool operator<(const Date& other) const {
+    return toDateNumber() < other.toDateNumber();
+  }
+  bool operator<=(const Date& other) const {
+    return toDateNumber() <= other.toDateNumber();
+  }
+
+ private:
+  // Based on tensorflow/python/compat/compat.py > _date_to_date_number
+  uint32_t toDateNumber() const { return (year << 9) | (month << 5) | day; }
+
+  uint32_t year;
+  uint32_t month;
+  uint32_t day;
+};
+
 class Version {
  public:
   /// Convenience method to extract major, minor, patch and create a Version
   /// from a StringRef of the form `#.#.#`. Returns failure if invalid string.
   static FailureOr<Version> fromString(llvm::StringRef versionRef);
 
+  /// This map is updated with each version bump in the StableHLO repository.
+  /// Every value in this map is a previously tagged release.
+  /// Values in the map are `{Date, Version}` where Date is the date that the
+  /// Version was tagged on GitHub.
+  static std::vector<std::pair<Date, Version>> const& getPreviousVersions() {
+    static const std::vector<std::pair<Date, Version>> previousVersions{
+        {Date(2023, 5, 8), Version(0, 11, 2)},
+        {Date(2023, 5, 3), Version(0, 11, 1)},
+        {Date(2023, 5, 2), Version(0, 11, 0)},
+        {Date(2023, 4, 27), Version(0, 10, 1)},
+        {Date(2023, 4, 20), Version(0, 10, 0)},
+        {Date(2023, 3, 2), Version(0, 9, 0)}};
+    return previousVersions;
+  }
+
   /// Return a Version representing the current VHLO dialect version.
+  /// If using StableHLO@HEAD this value is a prerelease.
   static Version getCurrentVersion() { return Version(0, 11, 3); }
 
   /// Return a Version representing the minimum supported VHLO dialect version.
-  static Version getMinimumVersion() { return Version(0, 9, 0); }
+  static Version getMinimumVersion() {
+    return getPreviousVersions().back().second;
+  }
 
   /// Construct Version from major, minor, patch integers.
   Version(int64_t major, int64_t minor, int64_t patch)
@@ -73,6 +112,8 @@ class Version {
 
 mlir::Diagnostic& operator<<(mlir::Diagnostic& diag, const Version& version);
 llvm::raw_ostream& operator<<(llvm::raw_ostream& os, const Version& version);
+
+FailureOr<Version> lookupPreviousVersion(Date request);
 
 }  // namespace vhlo
 

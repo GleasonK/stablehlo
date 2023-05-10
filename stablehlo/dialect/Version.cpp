@@ -16,6 +16,9 @@ limitations under the License.
 
 #include "stablehlo/dialect/Version.h"
 
+#include <algorithm>
+#include <cstdint>
+
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/Diagnostics.h"
@@ -60,6 +63,25 @@ mlir::Diagnostic& operator<<(mlir::Diagnostic& diag, const Version& version) {
 }
 llvm::raw_ostream& operator<<(llvm::raw_ostream& os, const Version& version) {
   return os << version.toString();
+}
+
+// Given a year/month/day input, returns the version of StableHLO that was
+// in production on that date.
+//
+// Returns current version for all dates in the future.
+// Returns failure if requested version is less than minimum supported version.
+FailureOr<Version> lookupPreviousVersion(Date request) {
+  auto const& versionMap = Version::getPreviousVersions();
+
+  auto it =
+      std::find_if(versionMap.begin(), versionMap.end(),
+                   [&request](auto& pair) { return pair.first <= request; });
+
+  // Less than minimum supported.
+  if (it == versionMap.end()) return failure();
+
+  // Found supported version
+  return it->second;
 }
 
 }  // namespace vhlo
