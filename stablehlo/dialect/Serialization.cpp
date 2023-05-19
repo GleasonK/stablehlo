@@ -54,8 +54,14 @@ LogicalResult serializePortableArtifact(ModuleOp module,
 
   // TODO(#1282): Consider adding a header to identify StableHLO portable
   // artifact versions.
+  // FIXME: This logic should be moved to Version.h so each release knows its
+  // bytecode version
   BytecodeWriterConfig config;
-  config.setDesiredBytecodeVersion(0); // FIXME: getBytecodeVersionForRelease("...");
+  if (targetVersion == "0.9.0")
+    config.setDesiredBytecodeVersion(0);
+  else
+    config.setDesiredBytecodeVersion(1);
+
   (void)writeBytecodeToFile(module, os, config);
   return success();
 }
