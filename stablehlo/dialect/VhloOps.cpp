@@ -37,6 +37,7 @@ limitations under the License.
 #include "mlir/Support/LogicalResult.h"
 #include "stablehlo/dialect/AssemblyFormat.h"
 #include "stablehlo/dialect/VhloBytecode.h"
+#include "stablehlo/dialect/VhloTypes.h"
 
 namespace mlir {
 namespace vhlo {
@@ -294,6 +295,38 @@ void VhloDialect::printAttribute(Attribute attr, DialectAsmPrinter& os) const {
   LogicalResult result = generatedAttributePrinter(attr, os);
   (void)result;
   assert(succeeded(result));
+}
+
+///////////////////////////
+// Op Constraint Versioning
+///////////////////////////
+// These could be migrated to ODS in VhloOps.td if we figured out a better way
+// to represent this sort of constraint in tablegen.
+
+namespace {
+Type getVhloElementType(Type tensorType) {
+  if (auto ranked = tensorType.dyn_cast<RankedTensorV1Type>()) {
+    return ranked.getElementType();
+  }
+  return tensorType.cast<UnrankedTensorV1Type>().getElementType();
+}
+}  // namespace
+
+// TODO: This is a partial check to demonstrate how constraint validation can
+// work. Need to check all results/operands probably?
+LogicalResult ReduceOpV1::validateConstraint(mlir::Operation* op,
+                                             Version targetVersion) {
+  // TODO: This does not work yet...
+  // Need to figure out how to properly get element type for these:
+  op->dump();
+  Type operandElementType = getVhloElementType(op->getOperandTypes()[0]);
+  Type resultElementType = getVhloElementType(op->getResultTypes()[0]);
+
+  // Allow mismatched operand and result types in v0.17.0
+  if (operandElementType != resultElementType &&
+      targetVersion < Version(0, 17, 0))
+    return failure();
+  return success();
 }
 
 }  // namespace vhlo

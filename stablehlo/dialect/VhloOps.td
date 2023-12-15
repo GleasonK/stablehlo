@@ -35,6 +35,17 @@ def VHLO_VersionedOpInterface : OpInterface<"VersionedOpInterface"> {
   ];
 }
 
+def VHLO_VersionedOpConstraintInterface : OpInterface<"VersionedOpConstraintInterface"> {
+  let cppNamespace = "::mlir::vhlo";
+  let methods = [
+    InterfaceMethod<
+      [{Validate versioned constraints on a versioned op.
+       Used if the spec'ed constraints of an op change over time.}],
+      "mlir::LogicalResult", "validateConstraint",
+      (ins "mlir::Operation*":$op, "mlir::vhlo::Version":$targetVersion)>,
+  ];
+}
+
 class VHLO_Op<string mnemonic, string minVersion, string maxVersion, list<Trait> traits = []> :
     Op<VHLO_Dialect, mnemonic,
       [DeclareOpInterfaceMethods<VHLO_VersionedOpInterface>] # traits> {
@@ -754,7 +765,8 @@ def VHLO_RecvOpV1 : VHLO_Op<"recv_v1", "0.9.0", "current"> {
   let results = (outs Variadic<VHLO_AnyType>:$results);
 }
 
-def VHLO_ReduceOpV1 : VHLO_Op<"reduce_v1", "0.9.0", "current", [SameVariadicOperandSize]> {
+def VHLO_ReduceOpV1 : VHLO_Op<"reduce_v1", "0.9.0", "current",
+    [SameVariadicOperandSize,  DeclareOpInterfaceMethods<VHLO_VersionedOpConstraintInterface>]> {
   let arguments = (ins
     Variadic<VHLO_AnyType>:$inputs,
     Variadic<VHLO_AnyType>:$init_values,
