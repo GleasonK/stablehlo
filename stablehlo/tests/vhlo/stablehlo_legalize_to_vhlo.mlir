@@ -563,6 +563,9 @@ func.func @default_dynamic_conv(%arg0: tensor<1x8x8x207xf32>, %arg1: tensor<3x3x
   func.return %0 : tensor<1x?x?x16xf32>
 }
 
+// FIXME: Need to update all (dynamic_)gather tests in this file.
+// then branch it into `stablehlo_legalize_to_vhlo.0_21_0.mlir` with filecheck test lines that match 0_18_0's.
+
 // CHECK-LABEL: "default_dynamic_gather"
 func.func @default_dynamic_gather(%arg0 : tensor<2x4x9xf32>, %arg1 : tensor<1x5x2xi32>, %arg2 : tensor<3xi32>) -> tensor<1x5x8xf32> {
   //      CHECK: "vhlo.dynamic_gather_v1"(%arg0, %arg1, %arg2) <{
@@ -570,7 +573,9 @@ func.func @default_dynamic_gather(%arg0 : tensor<2x4x9xf32>, %arg1 : tensor<1x5x
   // CHECK-SAME:   index_vector_dim = #vhlo.integer_v1<2 : i64>,
   // CHECK-SAME:   indices_are_sorted = #vhlo.bool_v1<false>,
   // CHECK-SAME:   offset_dims = #vhlo.tensor_v1<dense<2> : tensor<1xi64>>,
-  // CHECK-SAME:   start_index_map = #vhlo.tensor_v1<dense<[0, 1]> : tensor<2xi64>>
+  // CHECK-SAME:   operand_batching_dims = #vhlo.tensor_v1<dense<> : tensor<0xi64>>,
+  // CHECK-SAME:   start_index_map = #vhlo.tensor_v1<dense<[0, 1]> : tensor<2xi64>>,
+  // CHECK-SAME:   start_indices_batching_dims = #vhlo.tensor_v1<dense<> : tensor<0xi64>>
   // CHECK-SAME: }> : (!vhlo.tensor_v1<2x4x9x!vhlo.f32_v1>, !vhlo.tensor_v1<1x5x2x!vhlo.i32_v1>, !vhlo.tensor_v1<3x!vhlo.i32_v1>) -> !vhlo.tensor_v1<1x5x8x!vhlo.f32_v1>
   %0 = "stablehlo.dynamic_gather"(%arg0, %arg1, %arg2) {
     dimension_numbers = #stablehlo.gather<
@@ -582,6 +587,8 @@ func.func @default_dynamic_gather(%arg0 : tensor<2x4x9xf32>, %arg1 : tensor<1x5x
   } : (tensor<2x4x9xf32>, tensor<1x5x2xi32>, tensor<3xi32>) -> tensor<1x5x8xf32>
   func.return %0 : tensor<1x5x8xf32>
 }
+
+// FIXME: Add dynamic_gather_batch_dim test, and gather batch_dim test below
 
 func.func @default_func(%arg0: tensor<f32>) -> tensor<f32> {
   // CHECK:      "vhlo.func_v1"() <{
