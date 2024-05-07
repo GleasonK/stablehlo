@@ -232,6 +232,10 @@ LogicalResult AddOp::verify() {
 // AfterAllOp
 //===----------------------------------------------------------------------===//
 
+void AfterAllOp::build(OpBuilder& odsBuilder, OperationState& odsState) {
+  AfterAllOp::build(odsBuilder, odsState, {});
+}
+
 LogicalResult AfterAllOp::inferReturnTypes(
     MLIRContext* context, std::optional<Location> location, ValueRange operands,
     DictionaryAttr attributes, OpaqueProperties properties, RegionRange regions,
@@ -324,18 +328,6 @@ ParseResult ConstantOp::parse(OpAsmParser& parser, OperationState& result) {
 
 void ConstantOp::print(::mlir::OpAsmPrinter& p) {
   hlo::printConstantOp(p, getOperation(), getValue());
-}
-
-//===----------------------------------------------------------------------===//
-// CreateTokenOp
-//===----------------------------------------------------------------------===//
-
-LogicalResult CreateTokenOp::inferReturnTypes(
-    MLIRContext* context, std::optional<Location> location, ValueRange operands,
-    DictionaryAttr attributes, OpaqueProperties properties, RegionRange regions,
-    SmallVectorImpl<Type>& inferredReturnTypes) {
-  return hlo::inferCreateTokenOp(getStablehloDialect(context), location,
-                                 inferredReturnTypes);
 }
 
 //===----------------------------------------------------------------------===//

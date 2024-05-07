@@ -32,12 +32,12 @@ func.func @do_not_instrument_constant() -> tensor<1xi64> {
 
 // CHECK-LABEL: func @only_instrument_tensor_type
 func.func @only_instrument_tensor_type(%arg0: tensor<f32>) -> (!stablehlo.token, tuple<tensor<f32>>, tensor<f32>) {
-  // CHECK: stablehlo.create_token
+  // CHECK: stablehlo.after_all
   // CHECK-NEXT: stablehlo.tuple
   // CHECK-NEXT: [[SUM:%.*]] = stablehlo.add
   // CHECK-NEXT: interpreter.probe [[SUM]]
   // CHECK-NEXT: return
-  %0 = "stablehlo.create_token"() : () -> !stablehlo.token
+  %0 = "stablehlo.after_all"() : () -> !stablehlo.token
   %1 = "stablehlo.tuple"(%arg0) : (tensor<f32>) -> tuple<tensor<f32>>
   %2 = stablehlo.add %arg0, %arg0 : tensor<f32>
   func.return %0, %1, %2 : !stablehlo.token, tuple<tensor<f32>>, tensor<f32>

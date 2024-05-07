@@ -553,8 +553,6 @@ SmallVector<InterpreterValue> eval(Region &region,
       auto operand = scope.findTensor(op.getOperand());
       auto result = cosineOp(operand, op.getType());
       scope.add(op.getResult(), result);
-    } else if (isa<CreateTokenOp>(operation)) {
-      failOnDecomposableOp(operation);
     } else if (isa<CrossReplicaSumOp>(operation)) {
       failOnDecomposableOp(operation);
     } else if (auto op = dyn_cast<DivOp>(operation)) {

@@ -72,7 +72,6 @@ one of the following tracking labels.
 | convolution              | yes           | yes          | infeasible     | revisit         | yes         |
 | cosine                   | yes           | yes          | yes            | yes             | yes         |
 | count_leading_zeros      | yes           | yes          | yes            | yes             | yes         |
-| create_token             | no            | yes\*        | yes\*          | yes             | revisit     |
 | cross-replica-sum        | no            | revisit      | yes\*          | no              | revisit     |
 | custom_call              | yes           | yes          | infeasible     | yes             | yes         |
 | divide                   | yes           | yes          | yes            | yes             | yes         |

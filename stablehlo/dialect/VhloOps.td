@@ -347,7 +347,7 @@ def VHLO_CosineOpV1 : VHLO_Op<"cosine_v1", "0.9.0", "current"> {
 // TODO(#3): CreateTokenOp is not part of the StableHLO spec.
 // This operation is on its way out of StableHLO, so it is not included in
 // the StableHLO specification.
-def VHLO_CreateTokenOpV1 : VHLO_Op<"create_token_v1", "0.9.0", "current"> {
+def VHLO_CreateTokenOpV1 : VHLO_Op<"create_token_v1", "0.9.0", "0.19.0"> {
   let results = (outs VHLO_AnyType:$output);
 }
 

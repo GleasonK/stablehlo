@@ -764,9 +764,9 @@ func.func @dynamic_update_slice(%input: tensor<3x?x?xi64, #stablehlo.bounds<?, ?
 
 // -----
 
-// CHECK-LABEL: func @create_token
-func.func @create_token() -> !stablehlo.token {
-  %0 = "stablehlo.create_token"() : () -> !stablehlo.token
+// CHECK-LABEL: func @after_all
+func.func @after_all(%arg0: !stablehlo.token, %arg1: !stablehlo.token) -> !stablehlo.token {
+  %0 = "stablehlo.after_all"(%arg0, %arg1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
   // CHECK: types0 = !stablehlo.token
   %1 = "hlo_test_infer.get_return_types"(%0) : (!stablehlo.token) -> !stablehlo.token
   func.return %1 : !stablehlo.token
@@ -774,9 +774,9 @@ func.func @create_token() -> !stablehlo.token {
 
 // -----
 
-// CHECK-LABEL: func @after_all
-func.func @after_all(%arg0: !stablehlo.token, %arg1: !stablehlo.token) -> !stablehlo.token {
-  %0 = "stablehlo.after_all"(%arg0, %arg1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
+// CHECK-LABEL: func @after_all_create_token
+func.func @after_all_create_token() -> !stablehlo.token {
+  %0 = "stablehlo.after_all"() : () -> !stablehlo.token
   // CHECK: types0 = !stablehlo.token
   %1 = "hlo_test_infer.get_return_types"(%0) : (!stablehlo.token) -> !stablehlo.token
   func.return %1 : !stablehlo.token

@@ -647,6 +647,14 @@ func.func @reduce_scatter_invalid(%data: tensor<4x0xf32>) -> tensor<4x4xf32> {
 
 // -----
 
+// CHECK-LABEL: func @after_all
+func.func @after_all() -> !stablehlo.token {
+  %0 = "stablehlo.after_all"() : () -> !stablehlo.token
+  func.return %0: !stablehlo.token
+}
+
+// -----
+
 // CHECK-LABEL: func @all_to_all
 func.func @all_to_all(%data: tensor<4x16xf32>) -> tensor<16x4xf32> {
   %0 = "stablehlo.all_to_all"(%data) {
@@ -1612,13 +1620,6 @@ func.func @cholesky_c3(%arg0: tensor<1x2x1xf32>) -> tensor<1x2x1xf32> {
   // expected-error@+1 {{minor dimensions of 'a' must have equal size, got shape 1, 2, 1}}
   %0 = "stablehlo.cholesky"(%arg0) { lower = true } : (tensor<1x2x1xf32>) -> tensor<1x2x1xf32>
   func.return %0: tensor<1x2x1xf32>
-}
-
-// -----
-
-func.func @create_token() -> !stablehlo.token {
-  %0 = "stablehlo.create_token"() : () -> !stablehlo.token
-  func.return %0: !stablehlo.token
 }
 
 // -----
@@ -5597,7 +5598,7 @@ func.func @composite_c2(%arg0: tensor<f32>) {
 // -----
 
 func.func @foo() -> !stablehlo.token {
-  %0 = stablehlo.create_token : !stablehlo.token
+  %0 = stablehlo.after_all : !stablehlo.token
   func.return %0 : !stablehlo.token
 }
 
@@ -5612,7 +5613,7 @@ func.func @composite_c3(%arg0: tensor<f32>) {
 // -----
 
 func.func @foo(%arg0: tensor<f64>) -> !stablehlo.token {
-  %0 = stablehlo.create_token : !stablehlo.token
+  %0 = stablehlo.after_all : !stablehlo.token
   func.return %0 : !stablehlo.token
 }
 

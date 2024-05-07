@@ -1077,13 +1077,6 @@ func.func @op_cosine(%arg0: tensor<f32>) -> tensor<f32> {
   func.return %0 : tensor<f32>
 }
 
-// CHECK-LABEL: "op_create_token"
-func.func @op_create_token() -> !stablehlo.token {
-  // CHECK: "vhlo.create_token_v1"() : () -> !vhlo.token_v1
-  %0 = "stablehlo.create_token"() : () -> !stablehlo.token
-  func.return %0 : !stablehlo.token
-}
-
 // CHECK-LABEL: "op_cross_replica_sum"
 func.func @op_cross_replica_sum(%arg0: tensor<f32>) -> tensor<f32> {
   //               CHECK: "vhlo.cross-replica-sum_v1"(%arg0) <{

@@ -198,10 +198,6 @@ LogicalResult inferConvolutionOp(
     std::optional<ArrayAttr> precisionConfig,
     SmallVectorImpl<ShapedTypeComponents>& inferredReturnShapes);
 
-LogicalResult inferCreateTokenOp(HloDialectInterface* dialect,
-                                 std::optional<Location> location,
-                                 SmallVectorImpl<Type>& inferredReturnTypes);
-
 LogicalResult inferDotOp(
     std::optional<Location> location, RankedTensorType lhsType,
     RankedTensorType rhsType, std::optional<ArrayAttr> precisionConfig,

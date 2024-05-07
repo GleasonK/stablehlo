@@ -326,7 +326,7 @@ in StableHLO programs. In the meanwhile, here is the list of these operations:
 * `chlo` operations ([#602](https://github.com/openxla/stablehlo/issues/602)).
 * "Not in HLO" category of StableHLO operations - they were initially part of
   the StableHLO opset but have been later deemed to not fit it well:
-  `broadcast`, `create_token`, `cross-replica-sum`, `dot`, `einsum`,
+  `broadcast`, `cross-replica-sum`, `dot`, `einsum`,
   `torch_index_select`, `unary_einsum`
   ([#3](https://github.com/openxla/stablehlo/issues/3)), and
   `trace` ([#604](https://github.com/openxla/stablehlo/issues/604)).

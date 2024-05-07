@@ -34,10 +34,10 @@ func.func @encodings(%arg0: tensor<10x20xf32, #CSR>,
 func.func @zero_input() -> !stablehlo.token {
   // CHECK:      %0 = stablehlo.replica_id : tensor<ui32>
   // CHECK-NEXT: %1 = stablehlo.partition_id : tensor<ui32>
-  // CHECK-NEXT: %2 = stablehlo.create_token : !stablehlo.token
+  // CHECK-NEXT: %2 = stablehlo.after_all : !stablehlo.token
   %0 = "stablehlo.replica_id"() : () -> tensor<ui32>
   %1 = "stablehlo.partition_id"() : () -> tensor<ui32>
-  %2 = "stablehlo.create_token"() : () -> !stablehlo.token
+  %2 = "stablehlo.after_all"() : () -> !stablehlo.token
   return %2 : !stablehlo.token
 }
 

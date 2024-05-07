@@ -28,6 +28,11 @@ func.func @test_after_all(%arg0: !stablehlo.token, %arg1: !stablehlo.token) -> !
   func.return %0 : !stablehlo.token
 }
 
+func.func @test_after_all_create_token() -> !stablehlo.token {
+  %0 = "stablehlo.after_all"() : () -> !stablehlo.token
+  func.return %0 : !stablehlo.token
+}
+
 func.func @test_all_gather(%arg0: tensor<128x32xf32>) -> tensor<128x128xf32> {
   %0 = "stablehlo.all_gather"(%arg0) {
     all_gather_dim = 1 : i64,
@@ -270,11 +275,6 @@ func.func @test_convolution3(%arg0 : tensor<100x26x26x32xi8>, %arg1 : tensor<3x3
 func.func @test_convert(%arg0: tensor<2xi32>) -> tensor<2xf32> {
   %0 = "stablehlo.convert"(%arg0) : (tensor<2xi32>) -> tensor<2xf32>
   func.return %0 : tensor<2xf32>
-}
-
-func.func @test_create_token() -> !stablehlo.token {
-  %0 = "stablehlo.create_token"() : () -> !stablehlo.token
-  func.return %0 : !stablehlo.token
 }
 
 func.func @test_cross_replica_sum(%arg0: tensor<10xf32>) -> tensor<10xf32> {

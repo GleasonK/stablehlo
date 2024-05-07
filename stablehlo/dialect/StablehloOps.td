@@ -158,27 +158,6 @@ def StableHLO_DynamicIotaOp: StableHLO_ShapedInterfaceOp<"dynamic_iota", [Condit
   }];
 }
 
-def StableHLO_CreateTokenOp : StableHLO_Op<"create_token", [Pure,
-    DeclareOpInterfaceMethods<InferTypeOpInterface>]> {
-  let summary = "CreateToken operation";
-  let description = [{
-    This operation is on its way out of StableHLO, so it is not included in
-    the StableHLO specification: https://github.com/openxla/stablehlo/issues/3.
-
-    Informally, this operation does the same thing as AfterAllOp with 0 inputs:
-    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#after_all
-
-    Example:
-    ```mlir
-    %output = stablehlo.create_token : !stablehlo.token
-    ```
-  }];
-
-  let results = (outs HLO_Token:$output);
-
-  let assemblyFormat = "attr-dict `:` type(results)";
-}
-
 //===----------------------------------------------------------------------===//
 // StableHLO unary elementwise op definitions.
 //===----------------------------------------------------------------------===//
@@ -1193,6 +1172,9 @@ def StableHLO_AfterAllOp : StableHLO_Op<"after_all", [Pure,
 
   let arguments = (ins Variadic<HLO_Token>:$inputs /*after_all_i1*/);
   let results = (outs HLO_Token:$result);
+
+  // Add builder for token creation
+  let builders = [OpBuilder<(ins)>];
 
   let assemblyFormat = [{
     $inputs attr-dict

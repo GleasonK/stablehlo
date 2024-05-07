@@ -2044,13 +2044,6 @@ LogicalResult inferConvolutionOp(
   return success();
 }
 
-LogicalResult inferCreateTokenOp(HloDialectInterface* dialect,
-                                 std::optional<Location> location,
-                                 SmallVectorImpl<Type>& inferredReturnTypes) {
-  inferredReturnTypes.push_back(dialect->createTokenType());
-  return success();
-}
-
 LogicalResult inferDotOp(
     std::optional<Location> location, RankedTensorType lhsType,
     RankedTensorType rhsType, std::optional<ArrayAttr> precisionConfig,

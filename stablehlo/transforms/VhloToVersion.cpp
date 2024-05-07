@@ -37,6 +37,7 @@ limitations under the License.
 #include "stablehlo/dialect/VhloOps.h"
 #include "stablehlo/dialect/VhloTypes.h"
 #include "stablehlo/transforms/Passes.h"
+#include "third_party/stablehlo/stablehlo/dialect/VhloOps.h"
 
 #define DEBUG_TYPE "compat-passes"
 
@@ -292,6 +293,17 @@ struct VersionConversionPattern : OpConversionPattern<SourceOp> {
   }
 };
 
+struct CreateTokenToAfterAllPattern : OpConversionPattern<CreateTokenOpV1> {
+  using OpConversionPattern::OpConversionPattern;
+  LogicalResult matchAndRewrite(
+      CreateTokenOpV1 op, typename CreateTokenOpV1::Adaptor /*adaptor*/,
+      ConversionPatternRewriter& rewriter) const override {
+    rewriter.replaceOpWithNewOp<AfterAllOpV1>(
+        op, op->getResultTypes(), op->getOperands(), op->getAttrs());
+    return success();
+  }
+};
+
 /////////////////////////////////////////
 /// Upgrade and Downgrade Definitions ///
 /////////////////////////////////////////
@@ -303,8 +315,7 @@ namespace stablehlo {
 void populateVhloToVersionPatterns(RewritePatternSet* patterns,
                                    TypeConverter* converter,
                                    MLIRContext* context) {
-  // Currently empty because we're starting from a clean slate in v0.9.0 and
-  // changes so far are additive.
+  patterns->add<vhlo::CreateTokenToAfterAllPattern>(context);
 }
 
 }  // namespace stablehlo
