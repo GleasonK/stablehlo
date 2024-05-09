@@ -91,6 +91,16 @@ Tensor dotGeneralOp(const Tensor &lhs, const Tensor &rhs,
                     const Axes &lhsContractingDimensions,
                     const Axes &rhsContractingDimensions,
                     ShapedType resultType);
+Tensor dynamicConvOp(
+    const Tensor &lhs, const Tensor &rhs, const Tensor &dPadding,
+    ArrayRef<int64_t> windowStrides, ArrayRef<int64_t> lhsDilation,
+    ArrayRef<int64_t> rhsDilation, ArrayRef<bool> windowReversal,
+    Axis inputBatchDimension, Axis inputFeatureDimension,
+    const Axes &inputSpatialDimensions, Axis kernelInputFeatureDimension,
+    Axis kernelOutputFeatureDimension, const Axes &kernelSpatialDimensions,
+    Axis outputBatchDimension, Axis outputFeatureDimension,
+    const Axes &outputSpatialDimensions, int64_t featureGroupCount,
+    int64_t batchGroupCount, ShapedType resultType);
 Tensor dynamicIotaOp(Axis iotaDimension, const Tensor &outputShape,
                      ShapedType resultType);
 Tensor dynamicReshapeOp(const Tensor &operand, const Tensor &outputShape,

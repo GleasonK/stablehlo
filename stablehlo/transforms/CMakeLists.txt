@@ -20,6 +20,10 @@ set(LLVM_TARGET_DEFINITIONS ChloDecompositionPatterns.td)
 mlir_tablegen(ChloDecompositionPatterns.h.inc --gen-rewriters)
 add_public_tablegen_target(ChloDecompositionPatternsIncGen)
 
+set(LLVM_TARGET_DEFINITIONS VhloToVersionPatterns.td)
+mlir_tablegen(VhloToVersionPatterns.h.inc --gen-rewriters)
+add_public_tablegen_target(VhloToVersionPatterns)
+
 add_mlir_dialect_library(StablehloPasses
   PARTIAL_SOURCES_INTENDED
   ChloLegalizeToStablehlo.cpp
@@ -38,6 +42,7 @@ add_mlir_dialect_library(StablehloPasses
   DEPENDS
   ChloDecompositionPatternsIncGen
   PassesIncGen
+  VhloToVersionPatterns
 
   LINK_LIBS PUBLIC
   ChloOps

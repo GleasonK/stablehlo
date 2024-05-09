@@ -301,6 +301,21 @@ gentbl_cc_library(
     ],
 )
 
+gentbl_cc_library(
+    name = "vhlo_rewriters_inc_gen",
+    tbl_outs = [
+        (
+            ["--gen-rewriters"],
+            "stablehlo/transforms/VhloToVersionPatterns.h.inc",
+        ),
+    ],
+    tblgen = "@llvm-project//mlir:mlir-tblgen",
+    td_file = "stablehlo/transforms/VhloToVersionPatterns.td",
+    deps = [
+        ":vhlo_ops_td_files",
+    ],
+)
+
 cc_library(
     name = "interpreter_ops",
     srcs = [

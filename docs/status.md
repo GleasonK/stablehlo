@@ -79,7 +79,7 @@ one of the following tracking labels.
 | dot                      | no            | revisit      | infeasible     | yes             | revisit     |
 | dot_general              | yes           | revisit      | infeasible     | no              | yes         |
 | dynamic_broadcast_in_dim | no            | revisit      | infeasible     | no              | no          |
-| dynamic_conv             | no            | revisit      | no             | no              | no          |
+| dynamic_conv             | yes           | revisit      | infeasible     | no              | no          |
 | dynamic_gather           | no            | revisit      | revisit        | no              | no          |
 | dynamic_iota             | yes           | yes          | infeasible     | yes             | revisit     |
 | dynamic_pad              | no            | revisit      | no             | yes             | no          |
