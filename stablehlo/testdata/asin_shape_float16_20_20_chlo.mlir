@@ -8,7 +8,7 @@ module @jit_testcase {
     %0 = call @inputs() : () -> tensor<20x20xf16>
     %1 = call @expected() : () -> tensor<20x20xf16>
     %2 = chlo.asin %0 : tensor<20x20xf16> -> tensor<20x20xf16>
-    %3 = stablehlo.custom_call @check.eq(%2, %1) : (tensor<20x20xf16>, tensor<20x20xf16>) -> tensor<i1>
+    %3 = stablehlo.custom_call @check.expect_close(%2, %1) : (tensor<20x20xf16>, tensor<20x20xf16>) -> tensor<i1>
     return %3 : tensor<i1>
   }
   func.func private @inputs() -> tensor<20x20xf16> {

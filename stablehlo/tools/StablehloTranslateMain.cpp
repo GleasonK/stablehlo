@@ -75,13 +75,24 @@ llvm::Error evalCustomCallCheckEq(stablehlo::CustomCallOp op,
       isInt ? stablehlo::check::evalExpectEqOp(actualResult, expectedResult)
             : stablehlo::check::evalExpectAlmostEqOp(actualResult,
                                                      expectedResult);
-  if (status)
-    scope.add(op.getResults(), stablehlo::InterpreterValue(
-                                   makeBooleanTensor(op->getContext(), false)));
-  else
-    scope.add(op.getResults(), stablehlo::InterpreterValue(
-                                   makeBooleanTensor(op->getContext(), true)));
+  auto result = stablehlo::InterpreterValue(
+      makeBooleanTensor(op->getContext(), status ? false : true));
+  scope.add(op.getResults(), result);
+  return status;
+}
 
+llvm::Error evalCustomCallCheckClose(stablehlo::CustomCallOp op,
+                                     stablehlo::Scope &scope) {
+  if (op->getNumOperands() != 2)
+    return stablehlo::invalidArgument("Unsupported op: %s",
+                                      debugString(op).c_str());
+
+  auto actualResult = scope.findTensors(op->getOperands())[0];
+  auto expectedResult = scope.findTensors(op->getOperands())[1];
+  auto status = stablehlo::check::evalExpectCloseOp(actualResult, expectedResult, 0, 1);
+  auto result = stablehlo::InterpreterValue(
+      makeBooleanTensor(op->getContext(), status ? false : true));
+  scope.add(op.getResults(), result);
   return status;
 }
 
@@ -101,6 +112,12 @@ class StablehloTranslateInterpreterFallback
         auto status = evalCustomCallCheckEq(customCall, scope);
         return stablehlo::wrapFallbackStatus(
             std::move(status), funcName, "stablehlo.custom_call(@check.eq)");
+      }
+      if (customCall.getCallTargetName() == "check.expect_close") {
+        auto status = evalCustomCallCheckClose(customCall, scope);
+        return stablehlo::wrapFallbackStatus(
+            std::move(status), funcName,
+            "stablehlo.custom_call(@check.expect_close)");
       }
 
       return stablehlo::invalidArgument("Unsupported custom call: %s",

@@ -37,7 +37,6 @@ void createChloPreSerializationPipeline(OpPassManager &pm) {
   pm.addPass(mlir::createReconcileUnrealizedCastsPass());
 }
 
-
 void createStablehloRemoveDynamismPipeline(OpPassManager &pm,
                                            TypeRange refinedTypes) {
   pm.addPass(stablehlo::createStablehloRefineArgumentsPass(refinedTypes));
