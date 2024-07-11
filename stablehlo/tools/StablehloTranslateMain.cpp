@@ -89,7 +89,8 @@ llvm::Error evalCustomCallCheckClose(stablehlo::CustomCallOp op,
 
   auto actualResult = scope.findTensors(op->getOperands())[0];
   auto expectedResult = scope.findTensors(op->getOperands())[1];
-  auto status = stablehlo::check::evalExpectCloseOp(actualResult, expectedResult, 0, 1);
+  auto status =
+      stablehlo::check::evalExpectCloseOp(actualResult, expectedResult, 0, 1);
   auto result = stablehlo::InterpreterValue(
       makeBooleanTensor(op->getContext(), status ? false : true));
   scope.add(op.getResults(), result);
