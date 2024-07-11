@@ -1,5 +1,5 @@
-// RUN: stablehlo-opt --chlo-legalize-to-stablehlo %s | stablehlo-translate --serialize --target=current | stablehlo-translate --deserialize | stablehlo-opt > %t.0
-// RUN: stablehlo-opt --chlo-legalize-to-stablehlo %s > %t.1
+// RUN: stablehlo-opt --chlo-pre-serialization-pipeline %s | stablehlo-translate --serialize --target=current | stablehlo-translate --deserialize | stablehlo-opt > %t.0
+// RUN: stablehlo-opt --chlo-pre-serialization-pipeline --canonicalize %s > %t.1
 // RUN: diff %t.0 %t.1
 
 module @jit_fun_flat_jax {

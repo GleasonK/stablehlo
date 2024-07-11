@@ -12,6 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 #include "stablehlo/dialect/Version.h"
@@ -28,6 +29,14 @@ void createStablehloDeserializePipeline(OpPassManager &pm) {
   // Convert VHLO --> StableHLO. Will not fail within compatibility window.
   pm.addPass(stablehlo::createVhloLegalizeToStablehloPass());
 }
+
+void createChloPreSerializationPipeline(OpPassManager &pm) {
+  // CHLO --> StableHLO+Shape --> StableHLO
+  pm.addPass(stablehlo::createChloLegalizeToStablehloPass());
+  pm.addPass(stablehlo::createShapeLegalizeToStablehloPass());
+  pm.addPass(mlir::createReconcileUnrealizedCastsPass());
+}
+
 
 void createStablehloRemoveDynamismPipeline(OpPassManager &pm,
                                            TypeRange refinedTypes) {
@@ -53,9 +62,14 @@ void createStablehloLowerQuantPipeline(OpPassManager &pm) {
 }
 
 void registerPassPipelines() {
-  PassPipelineRegistration<>("stablehlo-deserialize",
-                             "Run an example pipeline.",
+  PassPipelineRegistration<>("stablehlo-deserialization-pipeline",
+                             "StableHLO deserialization pipeline",
                              createStablehloDeserializePipeline);
+
+  PassPipelineRegistration<>("chlo-pre-serialization-pipeline",
+                             "Lower as much as possible to StableHLO, "
+                             "including CHLO, Shape dialect, and index types.",
+                             createChloPreSerializationPipeline);
 }
 
 }  // namespace stablehlo
